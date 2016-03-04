@@ -1,5 +1,5 @@
 #TEAM
 **Mitglieder**
-Alex Kollert
-Lex Winandy
-Andreas J. Eckschlager
+*Alex Kollert (alexkollert)
+*Lex Winandy (snowlionking)
+*Andreas J. Eckschlager (aecksch)
