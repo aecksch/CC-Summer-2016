@@ -6,3 +6,6 @@ selfie:
 
 selfie_run:
 	./selfie -c selfie.c -m 2 selfie
+
+clean:
+	rm -f selfie selfie.o *~
