@@ -585,6 +585,7 @@ void initRegister() {
 // -----------------------------------------------------------------
 
 int encodeRFormat(int opcode, int rs, int rt, int rd, int function);
+int encodeRiFormat(int opcode, int rs, int rt, int shamt, int function);
 int encodeIFormat(int opcode, int rs, int rt, int immediate);
 int encodeJFormat(int opcode, int instr_index);
 
@@ -592,6 +593,7 @@ int getOpcode(int instruction);
 int getRS(int instruction);
 int getRT(int instruction);
 int getRD(int instruction);
+int getSHAMT(int instruction);
 int getFunction(int instruction);
 int getImmediate(int instruction);
 int getInstrIndex(int instruction);
@@ -683,6 +685,7 @@ void initDecoder() {
     *(FUNCTIONS + FCT_SLLV)    = (int) "sllv";
     *(FUNCTIONS + FCT_SRL)     = (int) "srl";
     *(FUNCTIONS + FCT_SRLV)    = (int) "srlv";
+}
 
 // -----------------------------------------------------------------
 // ----------------------------- CODE ------------------------------
@@ -903,7 +906,7 @@ void op_sw();
 void fct_sllv();
 void fct_srlv();
 void fct_sll();
-void fct_srl();
+//void fct_srl();
 
 // -----------------------------------------------------------------
 // -------------------------- INTERPRETER --------------------------
@@ -5040,6 +5043,7 @@ void fct_nop() {
 }
 
 void fct_sll() {
+    //TODO: Output anpassen
     if (debug) {
         printFunction(function);
         print((int*) " ");
@@ -5884,6 +5888,8 @@ void execute() {
             fct_syscall();
         else if (function == FCT_SLLV)
             fct_sllv();
+        else if (function == FCT_SRLV)
+            fct_srlv();
         else
             throwException(EXCEPTION_UNKNOWNINSTRUCTION, 0);
     } else if (opcode == OP_ADDIU)
