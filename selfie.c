@@ -3703,7 +3703,7 @@ int encodeRFormat(int opcode, int rs, int rt, int rd, int function) {
 //    6      5     5     5     5     6
 int encodeRiFormat(int opcode, int rt, int rd, int shamt, int function) {
     // assert: 0 <= opcode < 2^6
-    // assert: 0 <= rs < 2^5
+    // assert: 0 <= shamt < 2^5
     // assert: 0 <= rt < 2^5
     // assert: 0 <= rd < 2^5
     // assert: 0 <= function < 2^6
