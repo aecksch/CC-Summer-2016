@@ -906,7 +906,7 @@ void op_sw();
 void fct_sllv();
 void fct_srlv();
 void fct_sll();
-//void fct_srl();
+void fct_srl();
 
 // -----------------------------------------------------------------
 // -------------------------- INTERPRETER --------------------------
@@ -5043,13 +5043,12 @@ void fct_nop() {
 }
 
 void fct_sll() {
-    //TODO: Output anpassen
-    if (debug) {
+  if (debug) {
         printFunction(function);
         print((int*) " ");
         printRegister(rd);
         print((int*) ",");
-        printRegister(rs);
+        print(itoa(signExtend(shamt), string_buffer, 10, 0, 0));
         print((int*) ",");
         printRegister(rt);
         if (interpret) {
@@ -5058,9 +5057,9 @@ void fct_sll() {
             print((int*) "=");
             print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
             print((int*) ",");
-            printRegister(rs);
+            print((int*) "shamt");
             print((int*) "=");
-            print(itoa(*(registers+rs), string_buffer, 10, 0, 0));
+            print(itoa(signExtend(shamt), string_buffer, 10, 0, 0));
             print((int*) ",");
             printRegister(rt);
             print((int*) "=");
@@ -5084,6 +5083,49 @@ void fct_sll() {
         println();
     }
 }
+
+void fct_srl() {
+    if (debug) {
+        printFunction(function);
+        print((int*) " ");
+        printRegister(rd);
+        print((int*) ",");
+        print(itoa(signExtend(shamt), string_buffer, 10, 0, 0));
+        print((int*) ",");
+        printRegister(rt);
+        if (interpret) {
+            print((int*) ": ");
+            printRegister(rd);
+            print((int*) "=");
+            print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+            print((int*) ",");
+            print((int*) "shamt");
+            print((int*) "=");
+            print(itoa(signExtend(shamt), string_buffer, 10, 0, 0));
+            print((int*) ",");
+            printRegister(rt);
+            print((int*) "=");
+            print(itoa(*(registers+rt), string_buffer, 10, 0, 0));
+        }
+    }
+
+    if (interpret) {
+        *(registers+rd) = rightShift(*(registers+rs), shamt);
+
+        pc = pc + WORDSIZE;
+    }
+
+    if (debug) {
+        if (interpret) {
+            print((int*) " -> ");
+            printRegister(rd);
+            print((int*) "=");
+            print(itoa(*(registers+rd), string_buffer, 10, 0, 0));
+        }
+        println();
+    }
+}
+
 
 void op_jal() {
     if (debug) {
@@ -5890,6 +5932,8 @@ void execute() {
             fct_sllv();
         else if (function == FCT_SRLV)
             fct_srlv();
+        else if (function == FCT_SRL)
+            fct_srl();
         else
             throwException(EXCEPTION_UNKNOWNINSTRUCTION, 0);
     } else if (opcode == OP_ADDIU)
@@ -6602,8 +6646,8 @@ int main(int argc, int *argv) {
 
 	print((int*)"This is AAL Selfie");
 	println();
-
     if (selfie(argc, (int*) argv) != 0) {
+        
         print(selfieName);
         print((int*) ": usage: selfie { -c source | -o binary | -s assembly | -l binary } [ -m size ... | -d size ... | -y size ... ] ");
         println();
