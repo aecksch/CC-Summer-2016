@@ -331,6 +331,8 @@ void initScanner () {
     *(SYMBOLS + SYM_MOD)          = (int) "%";
     *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
     *(SYMBOLS + SYM_STRING)       = (int) "string";
+    *(SYMBOLS + SYM_LSHIFT)       = (int) "<<";
+    *(SYMBOLS + SYM_RSHIFT)       = (int) ">>";
 
     character = CHAR_EOF;
     symbol    = SYM_EOF;
