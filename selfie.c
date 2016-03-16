@@ -224,7 +224,6 @@ void printLineNumber(int* message, int line);
 
 void syntaxErrorMessage(int *message);
 void syntaxErrorCharacter(int character);
-
 void getCharacter();
 
 int isCharacterWhitespace();
@@ -269,6 +268,8 @@ int SYM_NOTEQ        = 24; // !=
 int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
+
+int SYM_RSHIFT       = 28; // <<
 
 int *SYMBOLS; // array of strings representing symbols
 
@@ -1892,6 +1893,10 @@ int getSymbol() {
             getCharacter();
 
             symbol = SYM_LEQ;
+        } else if (character == CHAR_LT) {
+            getCharacter();
+
+            symbol = SYM_LSHIFT;
         } else
             symbol = SYM_LT;
 
@@ -2785,6 +2790,40 @@ int gr_simpleExpression() {
     return ltype;
 }
 
+int gr_shiftExpression() {
+    int ltype;
+    int rtype;
+    int operatorSymbol;
+
+    //assert: n = allocatedTemporaries
+    ltype = gr_simpleExpression();
+
+    //assert: allocatedTemporaries == n + 1
+
+    //optional: <<, >> simpleExpression
+    if(isShift()) {
+        operatorSymbol = symbol;
+
+        getSymbol();
+
+        rtype = gr_simpleExpression();
+
+        //assert: allocatedTemporaries == n + 2
+
+        if (ltype != rtype)
+            typewarning(ltype, rtype);
+
+        if (operatorSymbol == SYM_LSHIFT) {
+            //Todo: Codegen
+        } else if (operatorSymbol == SYM_RSHIFT) {
+            //Todo: Codegen
+        }
+    }
+
+    // assert: allocatedTemporaries == n + 1
+    return ltype;
+}
+
 int gr_expression() {
     int ltype;
     int operatorSymbol;
@@ -2792,17 +2831,17 @@ int gr_expression() {
 
     // assert: n = allocatedTemporaries
 
-    ltype = gr_simpleExpression();
+    ltype = gr_shiftExpression();
 
     // assert: allocatedTemporaries == n + 1
 
-    //optional: ==, !=, <, >, <=, >= simpleExpression
+    //optional: ==, !=, <, >, <=, >=, <<, >> simpleExpression
     if (isComparison()) {
         operatorSymbol = symbol;
 
         getSymbol();
 
-        rtype = gr_simpleExpression();
+        rtype = gr_shiftExpression();
 
         // assert: allocatedTemporaries == n + 2
 
