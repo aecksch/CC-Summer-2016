@@ -269,9 +269,7 @@ int SYM_MOD          = 25; // %
 int SYM_CHARACTER    = 26; // character
 int SYM_STRING       = 27; // string
 int SYM_RSHIFT       = 28; // >>
-
-
-int SYM_RSHIFT       = 28; // <<
+int SYM_LSHIFT       = 29; // <<
 
 int *SYMBOLS; // array of strings representing symbols
 
@@ -2827,7 +2825,7 @@ int gr_shiftExpression() {
         //assert: allocatedTemporaries == n + 2
 
         if (ltype != rtype)
-            typewarning(ltype, rtype);
+            typeWarning(ltype, rtype);
 
         if (operatorSymbol == SYM_LSHIFT) {
             //Todo: Codegen
