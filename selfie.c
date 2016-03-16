@@ -2815,7 +2815,7 @@ int gr_shiftExpression() {
     //assert: allocatedTemporaries == n + 1
 
     //optional: <<, >> simpleExpression
-    if(isShift()) {
+    while(isShift()) {
         operatorSymbol = symbol;
 
         getSymbol();

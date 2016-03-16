@@ -37,7 +37,7 @@ term             = factor { ( "*" | "/" | "%" ) factor } .
 
 simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 
-shiftExpression = simpleExpression [ ( "<<" | ">>" ) simpleExpression] .
+shiftExpression = simpleExpression { ( "<<" | ">>" ) simpleExpression } .
 
 expression       = shiftExpression [ ( "==" | "!=" | "<" | ">" | "<=" | ">=" ) shiftExpression ] .
 
