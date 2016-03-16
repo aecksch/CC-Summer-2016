@@ -5045,7 +5045,7 @@ void fct_nop() {
         fct_sll();
     } else {
         if (debug) {
-            printFunction(function);
+            print((int*) "NOP");
             println();
         }
 
