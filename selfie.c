@@ -700,6 +700,7 @@ void storeBinary(int baddr, int instruction);
 void storeInstruction(int baddr, int instruction);
 
 void emitInstruction(int instruction);
+void emitRiFormat(int opcode,int rt, int rd, int shamt, int function);
 void emitRFormat(int opcode, int rs, int rt, int rd, int function);
 void emitIFormat(int opcode, int rs, int rt, int immediate);
 void emitJFormat(int opcode, int instr_index);
@@ -2830,7 +2831,7 @@ int gr_shiftExpression() {
             typeWarning(ltype, rtype);
 
         if (operatorSymbol == SYM_LSHIFT) {
-            //Todo: Codegen
+            emitRFormat(OP_SPECIAL,currentTemporary(),previousTemporary(),previousTemporary(),FCT_SLLV);
         } else if (operatorSymbol == SYM_RSHIFT) {
             //Todo: Codegen
         }
