@@ -3002,7 +3002,7 @@ int gr_shiftExpression(int* gr_attribute) {
         } else {
             rtype = gr_simpleExpression(gr_attribute);
             if (*(gr_attribute + 1) == 1){
-                load_integer(gr_attribute);
+                load_integer(*gr_attribute);
                 if (operatorSymbol == SYM_LSHIFT) {
                     emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(),FCT_SLLV);
                 } else if (operatorSymbol == SYM_RSHIFT) {
@@ -3051,7 +3051,7 @@ int gr_expression() {
 
         getSymbol();
 
-        rtype = gr_shiftExpression();
+        rtype = gr_shiftExpression(gr_attribute);
 
         // assert: allocatedTemporaries == n + 2
 
