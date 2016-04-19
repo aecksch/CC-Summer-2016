@@ -2862,6 +2862,9 @@ int gr_simpleExpression(int* gr_attribute) {
               } else if (rtype == INTSTAR_T)
                   typeWarning(ltype, rtype);
 
+              print(itoa(*(gr_attribute + 1), string_buffer, 10, 0, 0));
+              println();
+
               if(*(gr_attribute+1) != 0) { //right constant
                 if(*gr_attribute < twoToThePowerOf(16)) {
                   emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), *gr_attribute);
@@ -2872,8 +2875,11 @@ int gr_simpleExpression(int* gr_attribute) {
                   //*(gr_attribute+1) = 0;
                   tfree(1);
                 }
-              } else
+              } else {
                 emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+                tfree(1);
+              }
+                
 
           } else if (operatorSymbol == SYM_MINUS) {
               if (ltype != rtype)
@@ -2884,10 +2890,11 @@ int gr_simpleExpression(int* gr_attribute) {
                   emitRFormat(OP_SPECIAL, previousTemporary(), previousTemporary(), currentTemporary(), FCT_SUBU);
                   //*(gr_attribute+1) = 0;
                   tfree(1);
-              } else
+              } else{
                 emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SUBU);
+                tfree(1);          
+              } 
           }
-          tfree(1);
       }   
   } else {
       // + or -?
