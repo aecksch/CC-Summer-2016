@@ -3116,9 +3116,6 @@ int gr_expression() {
             emitIFormat(OP_BEQ, REG_ZR, REG_ZR, 2);
             emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 0);
         }
-    if (*(gr_attribute + 1) == 1){
-        tfree(1);
-    }
     }
 
     // assert: allocatedTemporaries == n + 1
