@@ -461,7 +461,7 @@ void help_procedure_epilogue(int parameters);
 int  gr_call(int *procedure);
 int  gr_factor();
 int  gr_term(int* gr_attribute);
-int  ression(int* gr_attribute);
+int  gr_simpleExpression(int* gr_attribute);
 int  gr_expression();
 void gr_while();
 void gr_if();
