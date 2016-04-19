@@ -2739,7 +2739,7 @@ int gr_term(int* gr_attribute) {
             emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
             tfree(1);
           }
-          //tfree(1);
+          tfree(1);
         }
 
       } else if (operatorSymbol == SYM_DIV) {
@@ -2757,7 +2757,7 @@ int gr_term(int* gr_attribute) {
             emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
             tfree(1);
           }
-          //tfree(1);
+          tfree(1);
         }
       } else if (operatorSymbol == SYM_MOD) {
         if(*(gr_attribute + 1) == 1){
@@ -2774,7 +2774,7 @@ int gr_term(int* gr_attribute) {
             emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
             tfree(1);
          }
-         //tfree(1);
+         tfree(1);
         }
       }
 
@@ -2865,11 +2865,11 @@ int gr_simpleExpression(int* gr_attribute) {
               if(*(gr_attribute+1) != 0) { //right constant
                 if(*gr_attribute < twoToThePowerOf(16)) {
                   emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), *gr_attribute);
-                  *(gr_attribute+1) = 0;
+                  //*(gr_attribute+1) = 0;
                 } else {
                   load_integer(*gr_attribute);
                   emitRFormat(OP_SPECIAL, previousTemporary(), previousTemporary(), currentTemporary(), FCT_ADDU);
-                  *(gr_attribute+1) = 0;
+                  //*(gr_attribute+1) = 0;
                   tfree(1);
                 }
               } else
@@ -2882,14 +2882,13 @@ int gr_simpleExpression(int* gr_attribute) {
               if(*(gr_attribute+1) != 0) { //right constant
                   load_integer(*gr_attribute);
                   emitRFormat(OP_SPECIAL, previousTemporary(), previousTemporary(), currentTemporary(), FCT_SUBU);
-                  *(gr_attribute+1) = 0;
+                  //*(gr_attribute+1) = 0;
                   tfree(1);
               } else
                 emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SUBU);
           }
-
           tfree(1);
-    }
+      }   
   } else {
       // + or -?
       while (isPlusOrMinus()) {
@@ -2937,10 +2936,9 @@ int gr_simpleExpression(int* gr_attribute) {
                   load_integer(lconst);
                   emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
                   tfree(1);
-                }
+                }           
             }
-
-            tfree(1);
+            tfree(1); 
             // assert: allocatedTemporaries == n + 1
         } else { //Constant
             if(operatorSymbol == SYM_PLUS) {
@@ -3053,6 +3051,10 @@ int gr_expression() {
 
         rtype = gr_shiftExpression(gr_attribute);
 
+        if (*(gr_attribute + 1) == 1){
+            load_integer(*gr_attribute);
+        }
+
         // assert: allocatedTemporaries == n + 2
 
         if (ltype != rtype)
@@ -3114,6 +3116,9 @@ int gr_expression() {
             emitIFormat(OP_BEQ, REG_ZR, REG_ZR, 2);
             emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 0);
         }
+    if (*(gr_attribute + 1) == 1){
+        tfree(1);
+    }
     }
 
     // assert: allocatedTemporaries == n + 1
