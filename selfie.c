@@ -2534,7 +2534,7 @@ int gr_call(int *procedure) {
     return type;
 }
 
-int gr_factor() {
+int gr_factor(int* gr_attribute) {
     int hasCast;
     int cast;
     int type;
@@ -2573,7 +2573,7 @@ int gr_factor() {
 
         // not a cast: "(" expression ")"
         } else {
-            type = gr_expression();
+            type = gr_expression(gr_expression);
 
             if (symbol == SYM_RPARENTHESIS)
                 getSymbol();
@@ -2613,6 +2613,7 @@ int gr_factor() {
             typeWarning(INTSTAR_T, type);
 
         // dereference
+
         emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
         type = INT_T;
@@ -2642,7 +2643,11 @@ int gr_factor() {
 
     // integer?
     } else if (symbol == SYM_INTEGER) {
-        load_integer(literal);
+
+        *gr_attribute = literal;
+        *(gr_attribute + 1) = 1;
+
+        //load_integer(literal);
 
         getSymbol();
 
