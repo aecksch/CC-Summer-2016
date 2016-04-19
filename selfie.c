@@ -460,7 +460,7 @@ void help_procedure_epilogue(int parameters);
 
 int  gr_call(int *procedure);
 int  gr_factor();
-int  gr_term();
+int  gr_term(int* gr_attribute);
 int  gr_simpleExpression(int* gr_attribute);
 int  gr_expression();
 void gr_while();
@@ -2687,44 +2687,79 @@ int gr_factor() {
         return type;
 }
 
-int gr_term() {
+int gr_term(int* gr_attribute) {
     int ltype;
     int operatorSymbol;
     int rtype;
+    int wasVariable;
+    int currentValue;
 
+    wasVariable = 0;
     // assert: n = allocatedTemporaries
 
-    ltype = gr_factor();
-
+    ltype = gr_factor(gr_attribute);
     // assert: allocatedTemporaries == n + 1
+    if(*(gr_attribute + 1) == 1){
+      currentValue = *gr_attribute;
+    }
+    else{
+      wasVariable = 1;
+    }
 
     // * / or % ?
     while (isStarOrDivOrModulo()) {
-        operatorSymbol = symbol;
+      operatorSymbol = symbol;
 
-        getSymbol();
+      getSymbol();
 
-        rtype = gr_factor();
+      rtype = gr_factor(gr_attribute);
 
-        // assert: allocatedTemporaries == n + 2
+      // assert: allocatedTemporaries == n + 2
 
-        if (ltype != rtype)
-            typeWarning(ltype, rtype);
+      if (ltype != rtype)
+        typeWarning(ltype, rtype);
 
-        if (operatorSymbol == SYM_ASTERISK) {
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
-            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-
-        } else if (operatorSymbol == SYM_DIV) {
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-
-        } else if (operatorSymbol == SYM_MOD) {
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+      if (operatorSymbol == SYM_ASTERISK) {
+        if(*(gr_attribute + 1) == 1){
+          currentValue = currentValue * *gr_attribute;
+        }
+        else{
+          load_integer(currentValue);
+          wasVariable = 1;
+          currentValue = 0;
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
         }
 
-        tfree(1);
+      } else if (operatorSymbol == SYM_DIV) {
+        if(*(gr_attribute + 1) == 1){
+          currentValue = currentValue * *gr_attribute;
+        }
+        else{
+          load_integer(currentValue);
+          wasVariable = 1;
+          currentValue = 0;
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+        }
+      } else if (operatorSymbol == SYM_MOD) {
+        if(*(gr_attribute + 1) == 1){
+          currentValue = currentValue * *gr_attribute;
+        }
+        else{
+          load_integer(currentValue);
+          wasVariable = 1;
+          currentValue = 0;
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+        }
+      }
+
+      tfree(1);
+    }
+    if(wasVariable == 0){
+      *gr_attribute = currentValue;
+      *(gr_attribute+1) = 1;
     }
 
     // assert: allocatedTemporaries == n + 1
