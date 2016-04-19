@@ -461,7 +461,7 @@ void help_procedure_epilogue(int parameters);
 int  gr_call(int *procedure);
 int  gr_factor();
 int  gr_term(int* gr_attribute);
-int  gr_simpleExpression(int* gr_attribute);
+int  ression(int* gr_attribute);
 int  gr_expression();
 void gr_while();
 void gr_if();
@@ -2704,10 +2704,10 @@ int gr_term(int* gr_attribute) {
 
     ltype = gr_factor(gr_attribute);
     // assert: allocatedTemporaries == n + 1
+
     if(*(gr_attribute + 1) == 1){
       currentValue = *gr_attribute;
-    }
-  else{
+    } else {
       wasVariable = 1;
     }
 
@@ -2727,43 +2727,58 @@ int gr_term(int* gr_attribute) {
       if (operatorSymbol == SYM_ASTERISK) {
         if(*(gr_attribute + 1) == 1){
           currentValue = currentValue * *gr_attribute;
-        }
-        else{
-          load_integer(currentValue);
-          wasVariable = 1;
-          currentValue = 0;
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-          tfree(1);
+        } else {
+          if(wasVariable == 1) {
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+          } else {
+            load_integer(currentValue);
+            wasVariable = 1;
+            currentValue = 0;
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            tfree(1);
+          }
+          //tfree(1);
         }
 
       } else if (operatorSymbol == SYM_DIV) {
         if(*(gr_attribute + 1) == 1){
-          currentValue = currentValue * *gr_attribute;
-        }
-        else{
-          load_integer(currentValue);
-          wasVariable = 1;
-          currentValue = 0;
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-          tfree(1);
+          currentValue = currentValue / *gr_attribute;
+        } else {
+          if(wasVariable == 1) {
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+          } else {
+            load_integer(currentValue);
+            wasVariable = 1;
+            currentValue = 0;
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            tfree(1);
+          }
+          //tfree(1);
         }
       } else if (operatorSymbol == SYM_MOD) {
         if(*(gr_attribute + 1) == 1){
-          currentValue = currentValue * *gr_attribute;
-        }
-        else{
-          load_integer(currentValue);
-          wasVariable = 1;
-          currentValue = 0;
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
-          tfree(1);
+          currentValue = currentValue % *gr_attribute;
+        } else {
+          if(wasVariable == 1) {
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+          } else {
+            load_integer(currentValue);
+            wasVariable = 1;
+            currentValue = 0;
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+            tfree(1);
+         }
+         //tfree(1);
         }
       }
 
-      tfree(1);
+
     }
     if(wasVariable == 0){
       *gr_attribute = currentValue;
@@ -2985,11 +3000,21 @@ int gr_expression() {
     int ltype;
     int operatorSymbol;
     int rtype;
+    int* gr_attribute;
+
+    gr_attribute = malloc(8); // *gr_attribute = constant value *(gr_attribute+1) = 0 if no constant 1 if constant
+
+    //Initialise Constantfolding
+    *gr_attribute = 0;
+    *(gr_attribute+1) = 0;
 
     // assert: n = allocatedTemporaries
 
-    ltype = gr_shiftExpression();
+    ltype = gr_shiftExpression(gr_attribute);
 
+    if(*(gr_attribute+1) == 1) {
+      load_integer(*gr_attribute);
+    }
     // assert: allocatedTemporaries == n + 1
 
     //optional: ==, !=, <, >, <=, >=, <<, >> simpleExpression
