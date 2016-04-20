@@ -2871,8 +2871,8 @@ int gr_simpleExpression(int* gr_attribute) {
               } else if (rtype == INTSTAR_T)
                   typeWarning(ltype, rtype);
 
-              print(itoa(*(gr_attribute + 1), string_buffer, 10, 0, 0));
-              println();
+              //print(itoa(*(gr_attribute + 1), string_buffer, 10, 0, 0));
+              //println();
 
               if(*(gr_attribute+1) != 0) { //right constant
                 if(*gr_attribute < twoToThePowerOf(16)) {
