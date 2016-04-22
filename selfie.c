@@ -1201,15 +1201,7 @@ int rightShift(int n, int b) {
             return n >> b;
         else
             return 0;
-    } else if (b < 31)
-        // works even if n == INT_MIN:
-        // shift right n with msb reset and then restore msb
-        return (((n + 1) + INT_MAX) >> b ) + ((INT_MAX >> b) +1);
-    else if (b == 31)
-        return 1;
-    else
-      return 0;
-  } else if (b < 31)
+    }  else if (b < 31)
     // works even if n == INT_MIN:
     // shift right n with msb reset and then restore msb
     return ((n + 1) + INT_MAX) / twoToThePowerOf(b) +
@@ -1901,34 +1893,30 @@ int getSymbol() {
 
     symbol = SYM_COMMA;
 
-            symbol = SYM_LEQ;
-        } else if (character == CHAR_LT) {
-            getCharacter();
-
-            symbol = SYM_LSHIFT;
-        } else
-            symbol = SYM_LT;
+  } else if (character == CHAR_LT) {
+    getCharacter();
 
     if (character == CHAR_EQUAL) {
       getCharacter();
 
       symbol = SYM_LEQ;
+    } else if(character == CHAR_LT) {
+      getCharacter();
+      symbol = SYM_LSHIFT;
     } else
       symbol = SYM_LT;
 
-            symbol = SYM_GEQ;
-
-        } else if (character == CHAR_GT){
-            getCharacter();
-            symbol = SYM_RSHIFT;
-
-        } else
-            symbol = SYM_GT;
+  } else if (character == CHAR_GT) {
+    getCharacter();
 
     if (character == CHAR_EQUAL) {
       getCharacter();
 
       symbol = SYM_GEQ;
+    } else if (character == CHAR_GT) {
+      getCharacter();
+
+      symbol = SYM_RSHIFT;
     } else
       symbol = SYM_GT;
 
@@ -2863,7 +2851,7 @@ int gr_expression() {
 
   // assert: n = allocatedTemporaries
 
-  ltype = gr_simpleExpression();
+  ltype = gr_shiftExpression();
 
   // assert: allocatedTemporaries == n + 1
 
@@ -2873,7 +2861,7 @@ int gr_expression() {
 
     getSymbol();
 
-    rtype = gr_simpleExpression();
+    rtype = gr_shiftExpression();
 
     // assert: allocatedTemporaries == n + 2
 
@@ -6033,58 +6021,7 @@ void execute() {
         else
             pc = pc + WORDSIZE;
     }
-    print((int*) ": ");
-    print(itoa(ir, string_buffer, 16, 8, 0));
-    print((int*) ": ");
   }
-
-  if (opcode == OP_SPECIAL) {
-    if (function == FCT_NOP)
-      fct_nop();
-    else if (function == FCT_ADDU)
-      fct_addu();
-    else if (function == FCT_SUBU)
-      fct_subu();
-    else if (function == FCT_MULTU)
-      fct_multu();
-    else if (function == FCT_DIVU)
-      fct_divu();
-    else if (function == FCT_MFHI)
-      fct_mfhi();
-    else if (function == FCT_MFLO)
-      fct_mflo();
-    else if (function == FCT_SLT)
-      fct_slt();
-    else if (function == FCT_JR)
-      fct_jr();
-    else if (function == FCT_SYSCALL)
-      fct_syscall();
-    else
-      throwException(EXCEPTION_UNKNOWNINSTRUCTION, 0);
-  } else if (opcode == OP_ADDIU)
-    op_addiu();
-  else if (opcode == OP_LW)
-    op_lw();
-  else if (opcode == OP_SW)
-    op_sw();
-  else if (opcode == OP_BEQ)
-    op_beq();
-  else if (opcode == OP_BNE)
-    op_bne();
-  else if (opcode == OP_JAL)
-    op_jal();
-  else if (opcode == OP_J)
-    op_j();
-  else
-    throwException(EXCEPTION_UNKNOWNINSTRUCTION, 0);
-
-  if (interpret == 0) {
-    if (pc == codeLength - WORDSIZE)
-      throwException(EXCEPTION_EXIT, 0);
-    else
-      pc = pc + WORDSIZE;
-  }
-}
 
 void interrupt() {
   cycles = cycles + 1;
@@ -6763,6 +6700,11 @@ int main(int argc, int* argv) {
   initDecoder();
 
   initInterpreter();
+
+  selfieName = (int*) *argv;
+
+  argc = argc - 1;
+  argv = argv + 1;
 
 	print((int*)"This is AAL Selfie");
 	println();
