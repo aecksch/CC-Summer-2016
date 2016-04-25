@@ -2692,122 +2692,124 @@ int gr_factor(int* gr_attribute) {
 }
 
 int gr_term(int* gr_attribute) {
-  int ltype;
-  int operatorSymbol;
-  int rtype;
-  int lconst;
-  int wasConst;
-  int isConst;
+    int ltype;
+    int operatorSymbol;
+    int rtype;
+    int wasVariable;
+    int currentValue;
 
-  wasConst = 0;
-  isConst = 0;
+    wasVariable = 0;
+    // assert: n = allocatedTemporaries
 
-  // assert: n = allocatedTemporaries
+    ltype = gr_factor(gr_attribute);
+    // assert: allocatedTemporaries == n + 1
 
-  ltype = gr_factor(gr_attribute);
-
-  if (*(gr_attribute + 1) == 1){
-    lconst = *gr_attribute;
-    wasConst = 1;
-  }
-
-  // assert: allocatedTemporaries == n + 1
-
-  // * / or % ?
-  while (isStarOrDivOrModulo()) {
-    operatorSymbol = symbol;
-
-    getSymbol();
-
-    rtype = gr_factor(gr_attribute);
-
-    // if (*(gr_attribute + 1) == 1){
-    //   load_integer(*gr_attribute);
-    //   *gr_attribute = 0;
-    //   *(gr_attribute + 1) = 0;
-    // }
-
-    // assert: allocatedTemporaries == n + 2
-
-    if (ltype != rtype)
-      typeWarning(ltype, rtype);
-
-    if (operatorSymbol == SYM_ASTERISK) {
-      if(*(gr_attribute+1) == 1) {
-        if(wasConst == 1) {
-          lconst = *gr_attribute * lconst;
-          isConst = 1;
-
-        } else {
-          load_integer(*gr_attribute);
-          isConst = 0;
-
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-          tfree(1);
-
-        }
-      } else {
-        if(wasConst == 1) {
-          load_integer(lconst);
-          wasConst = 0;
-          isConst = 0;
-        }
-
-        emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
-        emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-        tfree(1);
-
-      }
-
-
-    } else if (operatorSymbol == SYM_DIV) {
-      if (*(gr_attribute + 1) == 1){
-        load_integer(*gr_attribute);
-        *gr_attribute = 0;
-        *(gr_attribute + 1) = 0;
-        isConst = 0;
-      }
-
-      if(wasConst == 1) {
-        load_integer(lconst);
-        wasConst = 0;
-        isConst = 0;
-      }
-
-      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-      tfree(1);
-
-    } else if (operatorSymbol == SYM_MOD) {
-      if (*(gr_attribute + 1) == 1){
-        load_integer(*gr_attribute);
-        *gr_attribute = 0;
-        *(gr_attribute + 1) = 0;
-        isConst = 0;
-      }
-
-      if(wasConst == 1) {
-        load_integer(lconst);
-        wasConst = 0;
-        isConst = 0;
-      }
-
-      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
-      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
-      tfree(1);
+    if(*(gr_attribute + 1) == 1){
+      currentValue = *gr_attribute;
+    } else {
+      wasVariable = 1;
     }
 
-  }
+    // * / or % ?
+    while (isStarOrDivOrModulo()) {
+      operatorSymbol = symbol;
 
-  if(isConst == 1) {
-    *gr_attribute = lconst;
-    *(gr_attribute+1) = 1;
-  } else {
-    *gr_attribute = 0;
-    *(gr_attribute+1) = 0;
-  }
+      getSymbol();
 
+      rtype = gr_factor(gr_attribute);
+
+      // assert: allocatedTemporaries == n + 1
+
+      if (ltype != rtype)
+        typeWarning(ltype, rtype);
+
+      if (operatorSymbol == SYM_ASTERISK) {
+        if(*(gr_attribute + 1) == 1){
+          if(wasVariable == 1) {
+            load_integer(*gr_attribute);
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            tfree(1);
+          } else {
+            currentValue = currentValue * *gr_attribute;
+          }
+        } else {
+          if(wasVariable == 1) {
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            tfree(1);
+          } else {
+            load_integer(currentValue);
+            wasVariable = 1;
+            currentValue = 0;
+            emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            tfree(1);
+          }
+          //tfree(1);
+        }
+
+      } else if (operatorSymbol == SYM_DIV) {
+        if(*(gr_attribute + 1) == 1){
+          if(wasVariable == 1) {
+            load_integer(*gr_attribute);
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            tfree(1);
+          } else {
+            currentValue = currentValue / *gr_attribute;
+          }
+        } else {
+          if(wasVariable == 1) {
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            tfree(1);
+          } else {
+            load_integer(currentValue);
+            wasVariable = 1;
+            currentValue = 0;
+            emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_DIVU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            tfree(1);
+          }
+          //tfree(1);
+        }
+      } else if (operatorSymbol == SYM_MOD) {
+        if(*(gr_attribute + 1) == 1){
+          if(wasVariable == 1) {
+            load_integer(*gr_attribute);
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+            tfree(1);
+          } else {
+            currentValue = currentValue / *gr_attribute;
+          }
+        } else {
+          if(wasVariable == 1) {
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+            tfree(1);
+          } else {
+            load_integer(currentValue);
+            wasVariable = 1;
+            currentValue = 0;
+            emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_DIVU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+            tfree(1);
+          }
+          //tfree(1);
+        }
+      }
+
+
+    }
+
+    if(wasVariable == 0){
+      *gr_attribute = currentValue;
+      *(gr_attribute+1) = 1;
+    }else {
+      *(gr_attribute+1) = 0;
+    }
   // assert: allocatedTemporaries == n + 1
 
   return ltype;
