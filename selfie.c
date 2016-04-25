@@ -459,9 +459,9 @@ void help_procedure_prologue(int localVariables);
 void help_procedure_epilogue(int parameters);
 
 int  gr_call(int* procedure);
-int  gr_factor();
-int  gr_term();
-int  gr_simpleExpression();
+int  gr_factor(int* gr_attribute);
+int  gr_term(int* gr_attribute);
+int  gr_simpleExpression(int* gr_attribute);
 int  gr_expression();
 void gr_while();
 void gr_if();
@@ -2533,7 +2533,7 @@ int gr_call(int* procedure) {
   return type;
 }
 
-int gr_factor() {
+int gr_factor(int* gr_attribute) {
   int hasCast;
   int cast;
   int type;
@@ -2641,7 +2641,9 @@ int gr_factor() {
 
   // integer?
   } else if (symbol == SYM_INTEGER) {
-    load_integer(literal);
+    //load_integer(literal);
+    *gr_attribute = literal;
+    *(gr_attribute + 1) = 1;
 
     getSymbol();
 
@@ -2686,14 +2688,20 @@ int gr_factor() {
     return type;
 }
 
-int gr_term() {
+int gr_term(int* gr_attribute) {
   int ltype;
   int operatorSymbol;
   int rtype;
 
   // assert: n = allocatedTemporaries
 
-  ltype = gr_factor();
+  ltype = gr_factor(gr_attribute);
+
+  if (*(gr_attribute + 1) == 1){
+    load_integer(*gr_attribute);
+    *gr_attribute = 0;
+    *(gr_attribute + 1) = 0;
+  }
 
   // assert: allocatedTemporaries == n + 1
 
@@ -2703,7 +2711,13 @@ int gr_term() {
 
     getSymbol();
 
-    rtype = gr_factor();
+    rtype = gr_factor(gr_attribute);
+
+    if (*(gr_attribute + 1) == 1){
+      load_integer(*gr_attribute);
+      *gr_attribute = 0;
+      *(gr_attribute + 1) = 0;
+    }
 
     // assert: allocatedTemporaries == n + 2
 
@@ -2731,7 +2745,7 @@ int gr_term() {
   return ltype;
 }
 
-int gr_simpleExpression() {
+int gr_simpleExpression(int* gr_attribute) {
   int sign;
   int ltype;
   int operatorSymbol;
@@ -2760,7 +2774,13 @@ int gr_simpleExpression() {
   } else
     sign = 0;
 
-  ltype = gr_term();
+  ltype = gr_term(gr_attribute);
+
+  if (*(gr_attribute + 1) == 1){
+    load_integer(*gr_attribute);
+    *gr_attribute = 0;
+    *(gr_attribute + 1) = 0;
+  }
 
   // assert: allocatedTemporaries == n + 1
 
@@ -2780,7 +2800,13 @@ int gr_simpleExpression() {
 
     getSymbol();
 
-    rtype = gr_term();
+    rtype = gr_term(gr_attribute);
+
+    if (*(gr_attribute + 1) == 1){
+      load_integer(*gr_attribute);
+      *gr_attribute = 0;
+      *(gr_attribute + 1) = 0;
+    }
 
     // assert: allocatedTemporaries == n + 2
 
@@ -2809,13 +2835,19 @@ int gr_simpleExpression() {
   return ltype;
 }
 
-int gr_shiftExpression() {
+int gr_shiftExpression(int* gr_attribute) {
     int ltype;
     int rtype;
     int operatorSymbol;
 
     //assert: n = allocatedTemporaries
-    ltype = gr_simpleExpression();
+    ltype = gr_simpleExpression(gr_attribute);
+
+    if (*(gr_attribute + 1) == 1){
+      load_integer(*gr_attribute);
+      *gr_attribute = 0;
+      *(gr_attribute + 1) = 0;
+    }
 
     //assert: allocatedTemporaries == n + 1
 
@@ -2825,7 +2857,13 @@ int gr_shiftExpression() {
 
         getSymbol();
 
-        rtype = gr_simpleExpression();
+        rtype = gr_simpleExpression(gr_attribute);
+
+        if (*(gr_attribute + 1) == 1){
+          load_integer(*gr_attribute);
+          *gr_attribute = 0;
+          *(gr_attribute + 1) = 0;
+        }
 
         //assert: allocatedTemporaries == n + 2
 
@@ -2849,9 +2887,18 @@ int gr_expression() {
   int operatorSymbol;
   int rtype;
 
+  int* gr_attribute;
+  gr_attribute = malloc(8);
+
   // assert: n = allocatedTemporaries
 
-  ltype = gr_shiftExpression();
+  ltype = gr_shiftExpression(gr_attribute);
+
+  if (*(gr_attribute + 1) == 1){
+    load_integer(*gr_attribute);
+    *gr_attribute = 0;
+    *(gr_attribute + 1) = 0;
+  }
 
   // assert: allocatedTemporaries == n + 1
 
@@ -2861,7 +2908,13 @@ int gr_expression() {
 
     getSymbol();
 
-    rtype = gr_shiftExpression();
+    rtype = gr_shiftExpression(gr_attribute);
+
+    if (*(gr_attribute + 1) == 1){
+      load_integer(*gr_attribute);
+      *gr_attribute = 0;
+      *(gr_attribute + 1) = 0;
+    }
 
     // assert: allocatedTemporaries == n + 2
 
