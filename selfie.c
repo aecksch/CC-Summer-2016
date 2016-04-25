@@ -727,7 +727,7 @@ void selfie_load();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int maxBinaryLength = 262144; //131072 // 128KB
+int maxBinaryLength = 524288; //131072 // 128KB
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
@@ -2542,6 +2542,9 @@ int gr_factor(int* gr_attribute) {
 
   // assert: n = allocatedTemporaries
 
+  *gr_attribute = 0;
+  *(gr_attribute+1) = 0;
+
   hasCast = 0;
 
   type = INT_T;
@@ -2692,15 +2695,20 @@ int gr_term(int* gr_attribute) {
   int ltype;
   int operatorSymbol;
   int rtype;
+  int lconst;
+  int wasConst;
+  int isConst;
+
+  wasConst = 0;
+  isConst = 0;
 
   // assert: n = allocatedTemporaries
 
   ltype = gr_factor(gr_attribute);
 
   if (*(gr_attribute + 1) == 1){
-    load_integer(*gr_attribute);
-    *gr_attribute = 0;
-    *(gr_attribute + 1) = 0;
+    lconst = *gr_attribute;
+    wasConst = 1;
   }
 
   // assert: allocatedTemporaries == n + 1
@@ -2713,11 +2721,11 @@ int gr_term(int* gr_attribute) {
 
     rtype = gr_factor(gr_attribute);
 
-    if (*(gr_attribute + 1) == 1){
-      load_integer(*gr_attribute);
-      *gr_attribute = 0;
-      *(gr_attribute + 1) = 0;
-    }
+    // if (*(gr_attribute + 1) == 1){
+    //   load_integer(*gr_attribute);
+    //   *gr_attribute = 0;
+    //   *(gr_attribute + 1) = 0;
+    // }
 
     // assert: allocatedTemporaries == n + 2
 
@@ -2725,19 +2733,79 @@ int gr_term(int* gr_attribute) {
       typeWarning(ltype, rtype);
 
     if (operatorSymbol == SYM_ASTERISK) {
-      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
-      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+      if(*(gr_attribute+1) == 1) {
+        if(wasConst == 1) {
+          lconst = *gr_attribute * lconst;
+          isConst = 1;
+
+        } else {
+          load_integer(*gr_attribute);
+          isConst = 0;
+
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+          tfree(1);
+
+        }
+      } else {
+        if(wasConst == 1) {
+          load_integer(lconst);
+          wasConst = 0;
+          isConst = 0;
+        }
+
+        emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+        emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+        tfree(1);
+
+      }
+
 
     } else if (operatorSymbol == SYM_DIV) {
+      if (*(gr_attribute + 1) == 1){
+        load_integer(*gr_attribute);
+        *gr_attribute = 0;
+        *(gr_attribute + 1) = 0;
+        isConst = 0;
+      }
+
+      if(wasConst == 1) {
+        load_integer(lconst);
+        wasConst = 0;
+        isConst = 0;
+      }
+
       emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
       emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+      tfree(1);
 
     } else if (operatorSymbol == SYM_MOD) {
+      if (*(gr_attribute + 1) == 1){
+        load_integer(*gr_attribute);
+        *gr_attribute = 0;
+        *(gr_attribute + 1) = 0;
+        isConst = 0;
+      }
+
+      if(wasConst == 1) {
+        load_integer(lconst);
+        wasConst = 0;
+        isConst = 0;
+      }
+
       emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_DIVU);
       emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
+      tfree(1);
     }
 
-    tfree(1);
+  }
+
+  if(isConst == 1) {
+    *gr_attribute = lconst;
+    *(gr_attribute+1) = 1;
+  } else {
+    *gr_attribute = 0;
+    *(gr_attribute+1) = 0;
   }
 
   // assert: allocatedTemporaries == n + 1
