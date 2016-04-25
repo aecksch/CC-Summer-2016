@@ -727,7 +727,7 @@ void selfie_load();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
-int maxBinaryLength = 524288; //131072 // 128KB
+int maxBinaryLength = 262144; //131072 // 128KB
 
 // ------------------------ GLOBAL VARIABLES -----------------------
 
