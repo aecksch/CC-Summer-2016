@@ -2821,6 +2821,11 @@ int gr_simpleExpression(int* gr_attribute) {
   int operatorSymbol;
   int rtype;
 
+  int lconst;
+  int rconst;
+  int isLConst;
+  int isRConst;
+
   // assert: n = allocatedTemporaries
 
   // optional: -
@@ -2846,9 +2851,11 @@ int gr_simpleExpression(int* gr_attribute) {
 
   ltype = gr_term(gr_attribute);
 
-  if (*(gr_attribute + 1) == 1){
-    load_integer(*gr_attribute);
-    *gr_attribute = 0;
+  if (*(gr_attribute + 1)){
+    // load_integer(*gr_attribute);
+    // *(gr_attribute + 1) = 0;
+    lconst = *gr_attribute;
+    isLConst = 1;
     *(gr_attribute + 1) = 0;
   }
 
@@ -2859,9 +2866,13 @@ int gr_simpleExpression(int* gr_attribute) {
       typeWarning(INT_T, ltype);
 
       ltype = INT_T;
+    } else {
+      if (isLConst){
+        lconst = 0 - lconst;
+      } else {
+        emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
+      }
     }
-
-    emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
   }
 
   // + or -?
@@ -2872,34 +2883,62 @@ int gr_simpleExpression(int* gr_attribute) {
 
     rtype = gr_term(gr_attribute);
 
-    if (*(gr_attribute + 1) == 1){
-      load_integer(*gr_attribute);
-      *gr_attribute = 0;
+    if (*(gr_attribute + 1)){
+      // load_integer(*gr_attribute);
+      // *(gr_attribute + 1) = 0;
+      rconst = *gr_attribute;
+      isRConst = 1;
       *(gr_attribute + 1) = 0;
     }
 
     // assert: allocatedTemporaries == n + 2
 
-    if (operatorSymbol == SYM_PLUS) {
-      if (ltype == INTSTAR_T) {
-        if (rtype == INT_T)
-          // pointer arithmetic: factor of 2^2 of integer operand
-          emitLeftShiftBy(2);
-      } else if (rtype == INTSTAR_T)
-        typeWarning(ltype, rtype);
-
-      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
-
-    } else if (operatorSymbol == SYM_MINUS) {
-      if (ltype != rtype)
-        typeWarning(ltype, rtype);
-
-      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SUBU);
+    if (isLConst){
+      if (isRConst){
+        if (operatorSymbol == SYM_PLUS) {
+          lconst = lconst + rconst;
+          isRConst = 0;
+        } else if (operatorSymbol == SYM_MINUS) {
+          lconst = lconst - rconst;
+          isRConst = 0;
+        }
+      } else {
+        load_integer(lconst);
+        isLConst = 0;
+      }
+    } else {
+      if (isRConst){
+        load_integer(rconst);
+        isRConst = 0;
+      }
     }
 
-    tfree(1);
-  }
+    if (isLConst == 0){
+      if (isRConst == 0){
+        if (operatorSymbol == SYM_PLUS) {
+          if (ltype == INTSTAR_T) {
+            if (rtype == INT_T)
+              // pointer arithmetic: factor of 2^2 of integer operand
+              emitLeftShiftBy(2);
+          } else if (rtype == INTSTAR_T)
+            typeWarning(ltype, rtype);
 
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+
+        } else if (operatorSymbol == SYM_MINUS) {
+          if (ltype != rtype)
+            typeWarning(ltype, rtype);
+
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_SUBU);
+        }
+        tfree(1);
+      }
+    }
+  }
+  if(isLConst){
+    *(gr_attribute + 1) = 1;
+    *gr_attribute = lconst;
+  }
   // assert: allocatedTemporaries == n + 1
 
   return ltype;
