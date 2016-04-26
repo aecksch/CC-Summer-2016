@@ -2884,15 +2884,14 @@ int gr_simpleExpression(int* gr_attribute) {
 
     if (operatorSymbol == SYM_PLUS) {
       if(*(gr_attribute + 1) == 1){
-        if (ltype == INTSTAR_T) {
-          if (rtype == INT_T)
-            *gr_attribute = *gr_attribute * 4;
-            // pointer arithmetic: factor of 2^2 of integer operand
-            // emitLeftShiftBy(2);
-        } else if (rtype == INTSTAR_T)
-          typeWarning(ltype, rtype);
         if(wasVariable == 1) {
           load_integer(*gr_attribute);
+          if (ltype == INTSTAR_T) {
+            if (rtype == INT_T)
+              // pointer arithmetic: factor of 2^2 of integer operand
+              emitLeftShiftBy(2);
+          } else if (rtype == INTSTAR_T)
+            typeWarning(ltype, rtype);
           emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
           tfree(1);
         } else {
