@@ -6971,6 +6971,8 @@ int selfie(int argc, int* argv) {
   return 0;
 }
 
+int x;
+
 int main(int argc, int* argv) {
   initLibrary();
 
@@ -6988,6 +6990,38 @@ int main(int argc, int* argv) {
 
 	print((int*)"This is AAL Selfie");
 	println();
+  print((int*)"Testing Constant Folding:");
+  println();
+
+
+  x = 0;
+
+  print((int*)"Addition: x = 2 + 3 + x");
+  println();
+  x = 2 + 3 + x;
+  print((int*)"X should be 5: ");
+  print(itoa(x, string_buffer, 10, 0, 0));
+  println();
+  print((int*)"Substraction: x = x - 2 - 3");
+  println();
+  x = x - 3 - 2;
+  print((int*)"X should be 0: ");
+  print(itoa(x, string_buffer, 10, 0, 0));
+  println();
+  print((int*)"Multiplication: x = 2 * 3 * x");
+  println();
+  x = 2 * 3 * x;
+  print((int*)"X should be 0: ");
+  print(itoa(x, string_buffer, 10, 0, 0));
+  println();
+  print((int*)"Division: x = x / 2 / 3");
+  println();
+  x = x / 3 / 2;
+  print((int*)"X should be 0: ");
+  print(itoa(x, string_buffer, 10, 0, 0));
+  println();
+
+
     if (selfie(argc, (int*) argv) != 0) {
 
         print(selfieName);
