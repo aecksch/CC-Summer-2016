@@ -1,5 +1,7 @@
 #*
 *~
 selfie
+*.m
+*.s
 .DS_Store
 .localized
