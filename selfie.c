@@ -2882,6 +2882,11 @@ int gr_simpleExpression(int* gr_attribute) {
   int wasVariable;
   int currentValue;
 
+  int rconst;
+  int rIsConst;
+
+  rconst = 0;
+  rIsConst = 0;
   wasVariable = 0;
   // assert: n = allocatedTemporaries
 
@@ -2927,7 +2932,7 @@ int gr_simpleExpression(int* gr_attribute) {
       }
   }
 
-  // * / or % ?
+  // + or - ?
   while (isPlusOrMinus()) {
     operatorSymbol = symbol;
 
@@ -2943,23 +2948,22 @@ int gr_simpleExpression(int* gr_attribute) {
     if (operatorSymbol == SYM_PLUS) {
       if(*(gr_attribute + 1) == 1){
         if(wasVariable == 1) {
-          load_integer(*gr_attribute);
-
-          if (ltype == INTSTAR_T) {
-            if (rtype == INT_T)
-              // pointer arithmetic: factor of 2^2 of integer operand
-              emitLeftShiftBy(2);
-            else if (rtype == INTSTAR_T)
-              typeWarning(ltype, rtype);
-          }
-
-          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
-          tfree(1);
+          rconst = rconst + *gr_attribute;
+          rIsConst = 1;
         } else {
           currentValue = currentValue + *gr_attribute;
         }
       } else {
+
+
         if(wasVariable == 1) {
+          if(rIsConst == 1) {
+            load_integer(rconst);
+
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+            tfree(1);
+            rIsConst = 0;
+          }
 
           if (ltype == INTSTAR_T) {
             if (rtype == INT_T)
@@ -3005,6 +3009,23 @@ int gr_simpleExpression(int* gr_attribute) {
         //tfree(1);
       }
     }
+  }
+
+  if(rIsConst == 1) {
+
+    load_integer(rconst);
+
+    if (ltype == INTSTAR_T) {
+      if (rtype == INT_T)
+        // pointer arithmetic: factor of 2^2 of integer operand
+        emitLeftShiftBy(2);
+      else if (rtype == INTSTAR_T)
+        typeWarning(ltype, rtype);
+    }
+
+    emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+    tfree(1);
+    rIsConst = 0;
   }
 
   if(wasVariable == 0){
