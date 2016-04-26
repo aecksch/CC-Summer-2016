@@ -2903,13 +2903,25 @@ int gr_simpleExpression(int* gr_attribute) {
           isRConst = 0;
         }
       } else {
-        load_integer(lconst);
-        isLConst = 0;
+        if(lconst < 0){
+          load_integer(0 - lconst);
+          emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
+          isLConst = 0;
+        } else {
+          load_integer(lconst);
+          isLConst = 0;
+        }
       }
     } else {
       if (isRConst){
-        load_integer(rconst);
-        isRConst = 0;
+        if(rconst < 0){
+          load_integer(0 - rconst);
+          emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
+          isRConst = 0;
+        } else {
+          load_integer(rconst);
+          isRConst = 0;
+        }
       }
     }
 
