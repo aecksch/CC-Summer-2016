@@ -2730,7 +2730,11 @@ int gr_term(int* gr_attribute) {
     int rtype;
     int wasVariable;
     int currentValue;
+    int rconst;
+    int rIsConst;
 
+    rconst = 0;
+    rIsConst = 0;
     wasVariable = 0;
     // assert: n = allocatedTemporaries
 
@@ -2759,15 +2763,29 @@ int gr_term(int* gr_attribute) {
       if (operatorSymbol == SYM_ASTERISK) {
         if(*(gr_attribute + 1) == 1){
           if(wasVariable == 1) {
-            load_integer(*gr_attribute);
-            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
-            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-            tfree(1);
+            if(rIsConst == 0) {
+              rconst = *gr_attribute;
+              rIsConst = 1;
+            } else {
+              rconst = rconst * *gr_attribute;
+              rIsConst = 1;
+            }
+            // load_integer(*gr_attribute);
+            // emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+            // emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            // tfree(1);
           } else {
             currentValue = currentValue * *gr_attribute;
           }
         } else {
           if(wasVariable == 1) {
+            if(rIsConst == 1) {
+              load_integer(rconst);
+              emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+              emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+              tfree(1);
+              rIsConst = 0;
+            }
             emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
             emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
             tfree(1);
@@ -2835,6 +2853,14 @@ int gr_term(int* gr_attribute) {
       }
 
 
+    }
+
+    if(rIsConst == 1) {
+      load_integer(rconst);
+      emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
+      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+      tfree(1);
+      rIsConst = 0;
     }
 
     if(wasVariable == 0){
