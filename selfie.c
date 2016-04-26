@@ -2367,13 +2367,46 @@ void load_integer(int value) {
       // and finally add the remaining 3 lsbs
       emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), rightShift(leftShift(value, 29), 29));
     }
-  } else {
+  } else if(value < 0) {
+    if(value > INT_MIN) {
+      value = 0 - value;
+      if (value < twoToThePowerOf(15))
+        // ADDIU can only load numbers < 2^15 without sign extension
+        emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), value);
+      else if (value < twoToThePowerOf(28)) {
+        // load 14 msbs of a 28-bit number first
+        emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), rightShift(value, 14));
+
+        // shift left by 14 bits
+        emitLeftShiftBy(14);
+
+        // and finally add 14 lsbs
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), rightShift(leftShift(value, 18), 18));
+      } else {
+        // load 14 msbs of a 31-bit number first
+        emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), rightShift(value, 17));
+
+        emitLeftShiftBy(14);
+
+        // then add the next 14 msbs
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), rightShift(leftShift(value, 15), 18));
+
+        emitLeftShiftBy(3);
+
+        // and finally add the remaining 3 lsbs
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), rightShift(leftShift(value, 29), 29));
+      }
+
+      emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
+
+    }  else {
     // load largest positive 16-bit number with a single bit set: 2^14
     emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), twoToThePowerOf(14));
 
     // and then multiply 2^14 by 2^14*2^3 to get to 2^31 == INT_MIN
     emitLeftShiftBy(14);
     emitLeftShiftBy(3);
+    }
   }
 }
 
