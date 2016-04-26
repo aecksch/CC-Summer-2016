@@ -2846,7 +2846,7 @@ int gr_simpleExpression(int* gr_attribute) {
   } else
     sign = 0;
 
-  ltype = gr_factor(gr_attribute);
+  ltype = gr_term(gr_attribute);
   // assert: allocatedTemporaries == n + 1
 
   if(*(gr_attribute + 1) == 1){
@@ -2860,13 +2860,12 @@ int gr_simpleExpression(int* gr_attribute) {
       typeWarning(INT_T, ltype);
 
       ltype = INT_T;
-    } else {
+    }
       if (wasVariable == 0){
         currentValue = 0 - currentValue;
       } else {
         emitRFormat(OP_SPECIAL, REG_ZR, currentTemporary(), currentTemporary(), FCT_SUBU);
       }
-    }
   }
 
   // * / or % ?
@@ -2875,23 +2874,26 @@ int gr_simpleExpression(int* gr_attribute) {
 
     getSymbol();
 
-    rtype = gr_factor(gr_attribute);
+    rtype = gr_term(gr_attribute);
 
     // assert: allocatedTemporaries == n + 1
 
-    if (ltype != rtype)
-      typeWarning(ltype, rtype);
+    //if (ltype != rtype)
+    //  typeWarning(ltype, rtype);
 
     if (operatorSymbol == SYM_PLUS) {
       if(*(gr_attribute + 1) == 1){
         if(wasVariable == 1) {
           load_integer(*gr_attribute);
+
           if (ltype == INTSTAR_T) {
             if (rtype == INT_T)
               // pointer arithmetic: factor of 2^2 of integer operand
               emitLeftShiftBy(2);
-          } else if (rtype == INTSTAR_T)
-            typeWarning(ltype, rtype);
+            else if (rtype == INTSTAR_T)
+              typeWarning(ltype, rtype);
+          }
+
           emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
           tfree(1);
         } else {
@@ -2899,14 +2901,18 @@ int gr_simpleExpression(int* gr_attribute) {
         }
       } else {
         if(wasVariable == 1) {
+
           if (ltype == INTSTAR_T) {
             if (rtype == INT_T)
               // pointer arithmetic: factor of 2^2 of integer operand
               emitLeftShiftBy(2);
-          } else if (rtype == INTSTAR_T)
-            typeWarning(ltype, rtype);
+            else if (rtype == INTSTAR_T)
+              typeWarning(ltype, rtype);
+          }
+
           emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
           tfree(1);
+
         } else {
           load_integer(currentValue);
           wasVariable = 1;
@@ -2958,15 +2964,10 @@ int gr_shiftExpression(int* gr_attribute) {
     int ltype;
     int rtype;
     int operatorSymbol;
+    int lconst;
 
     //assert: n = allocatedTemporaries
     ltype = gr_simpleExpression(gr_attribute);
-
-    if (*(gr_attribute + 1) == 1){
-      load_integer(*gr_attribute);
-      *gr_attribute = 0;
-      *(gr_attribute + 1) = 0;
-    }
 
     //assert: allocatedTemporaries == n + 1
 
@@ -2976,30 +2977,57 @@ int gr_shiftExpression(int* gr_attribute) {
 
         getSymbol();
 
-        rtype = gr_simpleExpression(gr_attribute);
+        if(*(gr_attribute+1) == 1) { // Was a constant
+            lconst = *gr_attribute;
 
-        if (*(gr_attribute + 1) == 1){
-          load_integer(*gr_attribute);
-          *gr_attribute = 0;
-          *(gr_attribute + 1) = 0;
+            rtype = gr_simpleExpression(gr_attribute);
+
+            //assert: allocatedTemporaries == n + 2
+
+            if (ltype != rtype)
+                typeWarning(ltype, rtype);
+            if(*(gr_attribute+1) == 1) {
+                if (operatorSymbol == SYM_LSHIFT) {
+                    *gr_attribute = lconst << *gr_attribute;
+                } else if (operatorSymbol == SYM_RSHIFT) {
+                    *gr_attribute = lconst >> *gr_attribute;
+                }
+            } else {
+                load_integer(lconst);
+                *(gr_attribute+1) = 0;
+                if (operatorSymbol == SYM_LSHIFT) {
+                  emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(), previousTemporary(),FCT_SLLV);
+                } else if (operatorSymbol == SYM_RSHIFT) {
+                  emitRFormat(OP_SPECIAL, previousTemporary(),currentTemporary(), previousTemporary(), FCT_SRLV);
+                }
+                tfree(1);
+            }
+        } else {
+            rtype = gr_simpleExpression(gr_attribute);
+            if (*(gr_attribute + 1) == 1){
+                load_integer(*gr_attribute);
+                *(gr_attribute+1) = 0;
+                if (operatorSymbol == SYM_LSHIFT) {
+                    emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(),FCT_SLLV);
+                } else if (operatorSymbol == SYM_RSHIFT) {
+                    emitRFormat(OP_SPECIAL, currentTemporary() , previousTemporary(), previousTemporary(), FCT_SRLV);
+                }
+                //tfree(1);
+            } else {
+                if (operatorSymbol == SYM_LSHIFT) {
+                    emitRFormat(OP_SPECIAL, currentTemporary() ,previousTemporary(), previousTemporary(),FCT_SLLV);
+                } else if (operatorSymbol == SYM_RSHIFT) {
+                    emitRFormat(OP_SPECIAL, currentTemporary() , previousTemporary(), previousTemporary(), FCT_SRLV);
+                }
+            }
+            tfree(1);
         }
-
-        //assert: allocatedTemporaries == n + 2
-
-        if (ltype != rtype)
-            typeWarning(ltype, rtype);
-
-        if (operatorSymbol == SYM_LSHIFT) {
-            emitRFormat(OP_SPECIAL,currentTemporary(),previousTemporary(),previousTemporary(),FCT_SLLV);
-        } else if (operatorSymbol == SYM_RSHIFT) {
-            emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), previousTemporary(), FCT_SRLV);
-        }
-        tfree(1);
     }
 
     // assert: allocatedTemporaries == n + 1
     return ltype;
 }
+
 
 int gr_expression() {
   int ltype;
