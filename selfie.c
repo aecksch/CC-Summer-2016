@@ -2690,11 +2690,13 @@ int gr_factor(int* gr_attribute) {
       // reset return register
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
       // array access
-    } else if(symbol == SYM_LBRACKET){
+    } else if(symbol == SYM_LBRACKET) {
       getSymbol();
       type = gr_expression();
-      //TODO
-      
+
+      // dereference
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
       if(symbol == SYM_RBRACKET)
         getSymbol();
       else
@@ -3637,8 +3639,26 @@ void gr_variable(int offset) {
       }
       getSymbol();
     }
+    //TODO
 
     createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset);
+
+    //Load offset into register
+    load_variable(identifier);
+    //Store expression + offset in currentTemporary
+    emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), currentTemporary(), FCT_ADDU);
+
+    //Syscall Malloc
+    emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_MALLOC);
+    emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+    //Store address in identifier
+    emitIFormat(OP_SW, REG_SP, REG_V0, 0);
+
+    //TODO: check if success?
+
+
+
 
     //    getSymbol();
   } else {
@@ -3903,7 +3923,7 @@ void gr_cstar() {
             // type identifier[expression] ";" global array declaration
           if (symbol == SYM_SEMICOLON) {
             createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, type, 0, -allocatedMemory);
-         
+
             getSymbol();
           }
         } else {
