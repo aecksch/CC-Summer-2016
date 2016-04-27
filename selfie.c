@@ -3421,6 +3421,7 @@ void gr_statement() {
   int rtype;
   int* variableOrProcedureName;
   int* entry;
+  int atype;
 
   // assert: allocatedTemporaries == 0;
 
@@ -3508,8 +3509,21 @@ void gr_statement() {
 
     getSymbol();
 
-    // call
-    if (symbol == SYM_LPARENTHESIS) {
+    // array
+    if (symbol == SYM_LBRACKET) {
+      atype = gr_expression();
+      if(atype != INT_T) {
+        typeWarning(INT_T, atype);
+      }
+      getSymbol();
+
+      if(symbol != SYM_RBRACKET) {
+        syntaxErrorSymbol(SYM_RBRACKET);
+      }
+
+      ltype = INTSTAR_T;
+
+    } else if (symbol == SYM_LPARENTHESIS) { //call
       getSymbol();
 
       gr_call(variableOrProcedureName);
