@@ -3897,11 +3897,11 @@ void gr_cstar() {
             syntaxErrorSymbol(SYM_RBRACKET);
           getSymbol();
             // type identifier[expression] ";" global array declaration
-            if (symbol == SYM_SEMICOLON) {
-              createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, type, 0, -allocatedMemory);
+          if (symbol == SYM_SEMICOLON) {
+            createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, type, 0, -allocatedMemory);
          
             getSymbol();
-          
+          }
         } else {
           allocatedMemory = allocatedMemory + WORDSIZE;
 
@@ -7057,7 +7057,8 @@ int main(int argc, int* argv) {
   argc = argc - 1;
   argv = argv + 1;
 
-	print((int*)"This is AAL Selfie");
+  print((int*)"This is AAL Selfie");
+  println();
 
   if (selfie(argc, (int*) argv) != 0) {
 
