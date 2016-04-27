@@ -7005,44 +7005,13 @@ int main(int argc, int* argv) {
   argv = argv + 1;
 
 	print((int*)"This is AAL Selfie");
-	println();
-  print((int*)"Testing Constant Folding:");
-  println();
 
+  if (selfie(argc, (int*) argv) != 0) {
 
-  x = 0;
+    print(selfieName);
+    print((int*) ": usage: selfie { -c source | -o binary | -s assembly | -l binary } [ -m size ... | -d size ... | -y size ... ] ");
+    println();
+  }
 
-  print((int*)"Addition: x = 2 + 3 + x");
-  println();
-  x = 2 + 3 + x;
-  print((int*)"X should be 5: ");
-  print(itoa(x, string_buffer, 10, 0, 0));
-  println();
-  print((int*)"Substraction: x = x - 2 - 3");
-  println();
-  x = x - 3 - 2;
-  print((int*)"X should be 0: ");
-  print(itoa(x, string_buffer, 10, 0, 0));
-  println();
-  print((int*)"Multiplication: x = 2 * 3 * x");
-  println();
-  x = 2 * 3 * x;
-  print((int*)"X should be 0: ");
-  print(itoa(x, string_buffer, 10, 0, 0));
-  println();
-  print((int*)"Division: x = x / 2 / 3");
-  println();
-  x = x / 3 / 2;
-  print((int*)"X should be 0: ");
-  print(itoa(x, string_buffer, 10, 0, 0));
-  println();
-
-
-    if (selfie(argc, (int*) argv) != 0) {
-
-        print(selfieName);
-        print((int*) ": usage: selfie { -c source | -o binary | -s assembly | -l binary } [ -m size ... | -d size ... | -y size ... ] ");
-        println();
-    }
-    return 0;
+  return 0;
 }
