@@ -467,6 +467,7 @@ void help_procedure_epilogue(int parameters);
 int  gr_call(int* procedure);
 int  gr_factor(int* gr_attribute);
 int  gr_term(int* gr_attribute);
+int  gr_shiftExpression(int* gr_attribute);
 int  gr_simpleExpression(int* gr_attribute);
 int  gr_expression();
 void gr_while();
@@ -2686,7 +2687,18 @@ int gr_factor(int* gr_attribute) {
 
       // reset return register
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
-    } else
+      // array access
+    } else if(symbol == SYM_LBRACKET){
+      getSymbol();
+      type = gr_expression();
+      //TODO
+      
+      if(symbol == SYM_RBRACKET)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_RBRACKET);
+    }
+    else
       // variable access: identifier
       type = load_variable(variableOrProcedureName);
 
@@ -3848,7 +3860,19 @@ void gr_cstar() {
         // type identifier "(" procedure declaration or definition
         if (symbol == SYM_LPARENTHESIS)
           gr_procedure(variableOrProcedureName, type);
-        else {
+        else if(symbol == SYM_LBRACKET) {
+          type = INTSTAR_T;
+          allocatedMemory = allocatedMemory + WORDSIZE;
+          if(symbol != SYM_RBRACKET)
+            syntaxErrorSymbol(SYM_RBRACKET);
+          getSymbol();
+            // type identifier[expression] ";" global array declaration
+            if (symbol == SYM_SEMICOLON) {
+              createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, type, 0, -allocatedMemory);
+         
+            getSymbol();
+          
+        } else {
           allocatedMemory = allocatedMemory + WORDSIZE;
 
           // type identifier ";" global variable declaration
