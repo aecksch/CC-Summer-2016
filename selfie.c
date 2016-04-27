@@ -3624,21 +3624,23 @@ void gr_variable(int offset) {
     getSymbol();
     //Optional [shiftExpression]
     if(symbol == SYM_LBRACKET) {
+      getSymbol();
       atype = gr_expression();
       //Array should always be an integer
       if(atype != INT_T) {
         typeWarning(INT_T, atype);
       }
       type = INTSTAR_T;
-      getSymbol();
+      //getSymbol();
       if(symbol != SYM_RBRACKET) {
         syntaxErrorSymbol(SYM_RBRACKET);
       }
+      getSymbol();
     }
 
     createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset);
 
-    //getSymbol();
+    //    getSymbol();
   } else {
     syntaxErrorSymbol(SYM_IDENTIFIER);
 
