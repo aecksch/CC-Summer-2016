@@ -3592,6 +3592,11 @@ void gr_variable(int offset) {
   type = gr_type();
 
   if (symbol == SYM_IDENTIFIER) {
+    //Optional [shiftExpression]
+    if(symbol == SYM_LBRACKET) {
+      
+    }
+
     createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset);
 
     getSymbol();
