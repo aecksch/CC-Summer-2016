@@ -2162,6 +2162,8 @@ int lookForFactor() {
     return 0;
   else if (symbol == SYM_IDENTIFIER)
     return 0;
+  else if (symbol == SYM_LBRACKET)
+    return 0;
   else if (symbol == SYM_INTEGER)
     return 0;
   else if (symbol == SYM_CHARACTER)
