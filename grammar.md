@@ -27,8 +27,8 @@ call             = identifier "(" [ expression { "," expression } ] ")" .
 
 literal          = integer | "'" ascii_character "'" .
 
-factor           = [ cast ] 
-                    ( [ "*" ] ( identifier | "(" expression ")" ) |
+factor           = [ cast ]
+                    ( [ "*" ] ( identifier [ "[" shiftExpression "]" ] | "(" expression ")" ) |
                       call |
                       literal |
                       """ { ascii_character } """ ) .
@@ -41,31 +41,31 @@ shiftExpression = simpleExpression { ( "<<" | ">>" ) simpleExpression } .
 
 expression       = shiftExpression [ ( "==" | "!=" | "<" | ">" | "<=" | ">=" ) shiftExpression ] .
 
-while            = "while" "(" expression ")" 
+while            = "while" "(" expression ")"
                              ( statement |
                                "{" { statement } "}" ) .
 
-if               = "if" "(" expression ")" 
-                             ( statement | 
-                               "{" { statement } "}" ) 
+if               = "if" "(" expression ")"
+                             ( statement |
+                               "{" { statement } "}" )
                          [ "else"
                              ( statement |
                                "{" { statement } "}" ) ] .
 
 return           = "return" [ expression ] .
 
-statement        = ( [ "*" ] identifier | "*" "(" expression ")" ) "="
+statement        = ( [ "*" ] identifier [ "[" shiftExpression "]" ] | "*" "(" expression ")" ) "="
                       expression ";" |
-                    call ";" | 
-                    while | 
-                    if | 
+                    call ";" |
+                    while |
+                    if |
                     return ";" .
 
-variable         = type identifier .
+variable         = type identifier [ "[" shiftExpression "]" ].
 
-procedure        = "(" [ variable { "," variable } ] ")" 
+procedure        = "(" [ variable { "," variable } ] ")"
                     ( ";" | "{" { variable ";" } { statement } "}" ) .
 
-cstar            = { type identifier [ "=" [ cast ] [ "-" ] literal ] ";" |
-                   ( "void" | type ) identifier procedure } .
+cstar            = { type identifier [ "[" shiftExpression "]" ] [ "=" [ cast ] [ "-" ] literal ] ";" |
+                   ( "void" | type ) identifier [ "[" shiftExpression "]" ] procedure } .
 ```
