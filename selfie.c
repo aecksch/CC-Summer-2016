@@ -2694,13 +2694,15 @@ int gr_factor(int* gr_attribute) {
       getSymbol();
       type = gr_expression();
 
-      // dereference
-      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-
       if(symbol == SYM_RBRACKET)
         getSymbol();
       else
         syntaxErrorSymbol(SYM_RBRACKET);
+
+      // dereference
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
+
     }
     else
       // variable access: identifier
