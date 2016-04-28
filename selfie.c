@@ -3535,6 +3535,8 @@ void gr_statement() {
       }
       getSymbol();
 
+      //TODO: Codegen array
+
       if(symbol != SYM_RBRACKET) {
         syntaxErrorSymbol(SYM_RBRACKET);
       }
