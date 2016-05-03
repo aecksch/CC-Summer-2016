@@ -4462,7 +4462,9 @@ void emitGlobalsStrings() {
         arraysize = getSize(entry);
         if(arraysize > 0)
           binaryLength = binaryLength + arraysize * WORDSIZE;
-      } else
+        else
+          binaryLength = binaryLength + WORDSIZE;
+      }  else
         binaryLength = binaryLength + WORDSIZE;
     } else if (getClass(entry) == STRING)
       binaryLength = copyStringToBinary(getString(entry), binaryLength);
