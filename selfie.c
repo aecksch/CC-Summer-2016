@@ -423,7 +423,7 @@ int LIBRARY_TABLE = 3;
 int* global_symbol_table  = (int*) 0;
 int* local_symbol_table   = (int*) 0;
 int* library_symbol_table = (int*) 0;
-
+int* gr_attribute = (int*) 0; //FIXME
 // ------------------------- INITIALIZATION ------------------------
 
 void resetSymbolTables() {
@@ -461,7 +461,7 @@ void load_integer(int value);
 void load_string(int* string);
 
 int  help_call_codegen(int* entry, int* procedure);
-void help_procedure_prologue(int localVariables);
+void help_procedure_prologue(int localVariables,int arrayOffset);
 void help_procedure_epilogue(int parameters);
 
 int  gr_call(int* procedure);
@@ -475,7 +475,7 @@ void gr_if();
 void gr_return(int returnType);
 void gr_statement();
 int  gr_type();
-void gr_variable(int offset);
+int  gr_variable(int offset);
 void gr_initialization(int* name, int offset, int type);
 void gr_procedure(int* procedure, int returnType);
 void gr_cstar();
@@ -2474,7 +2474,7 @@ int help_call_codegen(int* entry, int* procedure) {
   return type;
 }
 
-void help_procedure_prologue(int localVariables) {
+void help_procedure_prologue(int localVariables,int arrayOffset) {
   // allocate space for return address
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, -WORDSIZE);
 
@@ -2492,7 +2492,7 @@ void help_procedure_prologue(int localVariables) {
 
   // allocate space for callee's local variables
   if (localVariables != 0)
-    emitIFormat(OP_ADDIU, REG_SP, REG_SP, -localVariables * WORDSIZE);
+    emitIFormat(OP_ADDIU, REG_SP, REG_SP, -localVariables * WORDSIZE - arrayOffset * WORDSIZE);
 }
 
 void help_procedure_epilogue(int parameters) {
@@ -2690,19 +2690,15 @@ int gr_factor(int* gr_attribute) {
       // reset return register
       emitIFormat(OP_ADDIU, REG_ZR, REG_V0, 0);
       // array access
-    } else if(symbol == SYM_LBRACKET) {
+    } else if(symbol == SYM_LBRACKET){
       getSymbol();
       type = gr_expression();
-
+      //TODO
+      
       if(symbol == SYM_RBRACKET)
         getSymbol();
       else
         syntaxErrorSymbol(SYM_RBRACKET);
-
-      // dereference
-      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-
-
     }
     else
       // variable access: identifier
@@ -3147,8 +3143,8 @@ int gr_expression() {
   int operatorSymbol;
   int rtype;
 
-  int* gr_attribute;
-  gr_attribute = malloc(8);
+  if(gr_attribute == (int*)0)//FIXME
+    gr_attribute = malloc(8);
 
   // assert: n = allocatedTemporaries
 
@@ -3535,11 +3531,18 @@ void gr_statement() {
       }
       getSymbol();
 
-      //TODO: Codegen array
-
       if(symbol != SYM_RBRACKET) {
         syntaxErrorSymbol(SYM_RBRACKET);
       }
+
+      getSymbol();
+
+      if (symbol == SYM_ASSIGN) {
+          getSymbol();
+          //TODO
+          
+      } else
+        syntaxErrorSymbol(SYM_ASSIGN);
 
       ltype = INTSTAR_T;
 
@@ -3620,18 +3623,29 @@ int gr_type() {
   return type;
 }
 
-void gr_variable(int offset) {
+int gr_variable(int offset) {
   int type;
   int atype;
+  int rvalue;
 
+  rvalue = 0;
   type = gr_type();
+
+  if(gr_attribute == (int*)0)//FIXME
+    gr_attribute = malloc(8);
 
   if (symbol == SYM_IDENTIFIER) {
     getSymbol();
-    //Optional [shiftExpression]
+    //Optional [Constant]
     if(symbol == SYM_LBRACKET) {
       getSymbol();
-      atype = gr_expression();
+      atype = gr_factor(gr_attribute);
+      if(*(gr_attribute+1) == 0){
+        print((int*)"gr_avriable: constant expected in Array declaration");
+        println();
+        exit(-1);
+      }
+      rvalue = *gr_attribute - 1;
       //Array should always be an integer
       if(atype != INT_T) {
         typeWarning(INT_T, atype);
@@ -3643,26 +3657,8 @@ void gr_variable(int offset) {
       }
       getSymbol();
     }
-    //TODO
 
     createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset);
-
-    //Load offset into register
-    load_variable(identifier);
-    //Store expression + offset in currentTemporary
-    emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), currentTemporary(), FCT_ADDU);
-
-    //Syscall Malloc
-    emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_MALLOC);
-    emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
-
-    //Store address in identifier
-    emitIFormat(OP_SW, REG_SP, REG_V0, 0);
-
-    //TODO: check if success?
-
-
-
 
     //    getSymbol();
   } else {
@@ -3670,6 +3666,7 @@ void gr_variable(int offset) {
 
     createSymbolTableEntry(LOCAL_TABLE, (int*) "missing variable name", lineNumber, VARIABLE, type, 0, offset);
   }
+  return rvalue;
 }
 
 void gr_initialization(int* name, int offset, int type) {
@@ -3754,7 +3751,9 @@ void gr_procedure(int* procedure, int returnType) {
   int localVariables;
   int functionStart;
   int* entry;
-
+  int arrayOffset;
+  int totalArrayOffset;
+  
   currentProcedureName = procedure;
 
   numberOfParameters = 0;
@@ -3838,10 +3837,14 @@ void gr_procedure(int* procedure, int returnType) {
 
     localVariables = 0;
 
+    arrayOffset = 0;
+    totalArrayOffset = 0;
+
     while (symbol == SYM_INT) {
       localVariables = localVariables + 1;
 
-      gr_variable(-localVariables * WORDSIZE);
+      arrayOffset = gr_variable(-localVariables * WORDSIZE - arrayOffset * WORDSIZE);
+      totalArrayOffset = totalArrayOffset + arrayOffset;
 
       if (symbol == SYM_SEMICOLON)
         getSymbol();
@@ -3849,7 +3852,7 @@ void gr_procedure(int* procedure, int returnType) {
         syntaxErrorSymbol(SYM_SEMICOLON);
     }
 
-    help_procedure_prologue(localVariables);
+    help_procedure_prologue(localVariables,totalArrayOffset);
 
     // create a fixup chain for return statements
     returnBranches = 0;
@@ -3927,7 +3930,7 @@ void gr_cstar() {
             // type identifier[expression] ";" global array declaration
           if (symbol == SYM_SEMICOLON) {
             createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, type, 0, -allocatedMemory);
-
+         
             getSymbol();
           }
         } else {
