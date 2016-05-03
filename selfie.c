@@ -2693,8 +2693,9 @@ int gr_factor(int* gr_attribute) {
     } else if(symbol == SYM_LBRACKET){
       getSymbol();
       type = gr_expression();
-      //TODO
-      
+      // dereference
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
       if(symbol == SYM_RBRACKET)
         getSymbol();
       else
@@ -3540,7 +3541,7 @@ void gr_statement() {
       if (symbol == SYM_ASSIGN) {
           getSymbol();
           //TODO
-          
+
       } else
         syntaxErrorSymbol(SYM_ASSIGN);
 
@@ -3753,7 +3754,7 @@ void gr_procedure(int* procedure, int returnType) {
   int* entry;
   int arrayOffset;
   int totalArrayOffset;
-  
+
   currentProcedureName = procedure;
 
   numberOfParameters = 0;
@@ -3886,6 +3887,10 @@ void gr_cstar() {
   int type;
   int* variableOrProcedureName;
 
+  if(gr_attribute == (int*) 0) {
+    gr_attribute = malloc(8);
+  }
+
   while (symbol != SYM_EOF) {
     while (lookForType()) {
       syntaxErrorUnexpected();
@@ -3922,15 +3927,22 @@ void gr_cstar() {
         if (symbol == SYM_LPARENTHESIS)
           gr_procedure(variableOrProcedureName, type);
         else if(symbol == SYM_LBRACKET) {
-          type = INTSTAR_T;
-          allocatedMemory = allocatedMemory + WORDSIZE;
+          getSymbol();
+          type = gr_shiftExpression(gr_attribute);
+          if(*(gr_attribute + 1) != 1) {
+            syntaxErrorMessage("Array declaration should be constant!");
+          } else {
+            allocatedMemory = allocatedMemory + *gr_attribute * WORDSIZE;
+          }
+
           if(symbol != SYM_RBRACKET)
             syntaxErrorSymbol(SYM_RBRACKET);
+
           getSymbol();
             // type identifier[expression] ";" global array declaration
           if (symbol == SYM_SEMICOLON) {
             createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, type, 0, -allocatedMemory);
-         
+
             getSymbol();
           }
         } else {
