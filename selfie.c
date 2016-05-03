@@ -311,9 +311,9 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-    SYMBOLS = malloc(32 * SIZEOFINTSTAR);
-
-    *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
+  SYMBOLS = malloc(32 * SIZEOFINTSTAR);
+  
+  *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
     *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
     *(SYMBOLS + SYM_VOID)         = (int) "void";
     *(SYMBOLS + SYM_INT)          = (int) "int";
@@ -2498,7 +2498,7 @@ void help_procedure_prologue(int localVariables,int arrayOffset) {
 
   // allocate space for callee's local variables
   if (localVariables != 0)
-    emitIFormat(OP_ADDIU, REG_SP, REG_SP, -localVariables * WORDSIZE - arrayOffset * WORDSIZE);
+    emitIFormat(OP_ADDIU, REG_SP, REG_SP, -localVariables * WORDSIZE - (arrayOffset * WORDSIZE));
 }
 
 void help_procedure_epilogue(int parameters) {
@@ -2698,8 +2698,11 @@ int gr_factor(int* gr_attribute) {
       // array access
     } else if(symbol == SYM_LBRACKET){
       getSymbol();
+      load_variable(variableOrProcedureName);
+
       type = gr_expression();
 
+      emitLeftShiftBy(2);
       // dereference
       emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
@@ -3152,8 +3155,8 @@ int gr_expression() {
   int operatorSymbol;
   int rtype;
 
-  if(gr_attribute == (int*)0)//FIXME
-    gr_attribute = malloc(8);
+  //  if(gr_attribute == (int*)0)//FIXME
+        // gr_attribute = malloc(8);
 
   // assert: n = allocatedTemporaries
 
@@ -3529,16 +3532,22 @@ void gr_statement() {
   // identifier "=" expression | call
   else if (symbol == SYM_IDENTIFIER) {
     variableOrProcedureName = identifier;
-
     getSymbol();
 
     // array
     if (symbol == SYM_LBRACKET) {
+      getSymbol();
+      load_variable(variableOrProcedureName);
+
       atype = gr_expression();
+
+      emitLeftShiftBy(2);
+      emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+      
       if(atype != INT_T) {
         typeWarning(INT_T, atype);
       }
-      getSymbol();
+      //      getSymbol();
 
       if(symbol != SYM_RBRACKET) {
         syntaxErrorSymbol(SYM_RBRACKET);
@@ -3562,7 +3571,12 @@ void gr_statement() {
       } else
         syntaxErrorSymbol(SYM_ASSIGN);
 
-      ltype = INTSTAR_T;
+      if (symbol == SYM_SEMICOLON)
+        getSymbol();
+      else
+        syntaxErrorSymbol(SYM_SEMICOLON);
+      
+      ltype = getBaseType(getSymbolTableEntry(variableOrProcedureName,VARIABLE));
 
     } else if (symbol == SYM_LPARENTHESIS) { //call
       getSymbol();
@@ -3657,7 +3671,7 @@ int gr_variable(int offset) {
     //Optional [Constant]
     if(symbol == SYM_LBRACKET) {
       getSymbol();
-      atype = gr_factor(gr_attribute);
+      atype = gr_shiftExpression(gr_attribute);
       if(*(gr_attribute+1) == 0){
         print((int*)"gr_avriable: constant expected in Array declaration");
         println();
@@ -3948,9 +3962,10 @@ void gr_cstar() {
           getSymbol();
           type = gr_shiftExpression(gr_attribute);
           if(*(gr_attribute + 1) != 1) {
-            syntaxErrorMessage("Array declaration should be constant!");
-          } else {
-            allocatedMemory = allocatedMemory + *gr_attribute * WORDSIZE;
+            syntaxErrorMessage((int*)"Array declaration should be constant!");
+          }
+          else {
+            allocatedMemory = allocatedMemory + (*gr_attribute * WORDSIZE);    
           }
 
           if(symbol != SYM_RBRACKET)
@@ -3960,7 +3975,7 @@ void gr_cstar() {
             // type identifier[expression] ";" global array declaration
           if (symbol == SYM_SEMICOLON) {
             createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, INTSTAR_T, 0, -allocatedMemory, *gr_attribute, type);
-
+        
             getSymbol();
           }
         } else {
@@ -4461,7 +4476,7 @@ void emitGlobalsStrings() {
       if(getType(entry) == INTSTAR_T){
         arraysize = getSize(entry);
         if(arraysize > 0)
-          binaryLength = binaryLength + arraysize * WORDSIZE;
+          binaryLength = binaryLength + (arraysize * WORDSIZE);
         else
           binaryLength = binaryLength + WORDSIZE;
       }  else
