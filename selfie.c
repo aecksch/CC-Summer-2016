@@ -390,6 +390,8 @@ int  getType(int* entry)       { return        *(entry + 4); }
 int  getValue(int* entry)      { return        *(entry + 5); }
 int  getAddress(int* entry)    { return        *(entry + 6); }
 int  getScope(int* entry)      { return        *(entry + 7); }
+int  getSize(int* entry)       { return        *(entry + 8); }
+int  getBaseType(int* entry)   { return        *(entry + 9); }
 
 void setNextEntry(int* entry, int* next)    { *entry       = (int) next; }
 void setString(int* entry, int* identifier) { *(entry + 1) = (int) identifier; }
@@ -399,6 +401,8 @@ void setType(int* entry, int type)          { *(entry + 4) = type; }
 void setValue(int* entry, int value)        { *(entry + 5) = value; }
 void setAddress(int* entry, int address)    { *(entry + 6) = address; }
 void setScope(int* entry, int scope)        { *(entry + 7) = scope; }
+void setSize(int* entry, int size)          { *(entry + 8) = size; }
+void setBaseType(int* entry, int baseType)  { *(entry + 9) = baseType; }
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -2694,7 +2698,7 @@ int gr_factor(int* gr_attribute) {
       getSymbol();
       type = gr_expression();
       //TODO
-      
+
       if(symbol == SYM_RBRACKET)
         getSymbol();
       else
@@ -3540,7 +3544,7 @@ void gr_statement() {
       if (symbol == SYM_ASSIGN) {
           getSymbol();
           //TODO
-          
+
       } else
         syntaxErrorSymbol(SYM_ASSIGN);
 
@@ -3753,7 +3757,7 @@ void gr_procedure(int* procedure, int returnType) {
   int* entry;
   int arrayOffset;
   int totalArrayOffset;
-  
+
   currentProcedureName = procedure;
 
   numberOfParameters = 0;
@@ -3930,7 +3934,7 @@ void gr_cstar() {
             // type identifier[expression] ";" global array declaration
           if (symbol == SYM_SEMICOLON) {
             createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, type, 0, -allocatedMemory);
-         
+
             getSymbol();
           }
         } else {
