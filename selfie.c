@@ -281,7 +281,7 @@ int SYM_LSHIFT       = 29; // <<
 int SYM_LBRACKET     = 30; // [
 int SYM_RBRACKET     = 31; // ]
 
-int* SYMBOLS; // array of strings representing symbols
+int SYMBOLS[32]; // array of strings representing symbols
 
 int maxIdentifierLength = 64; // maximum number of characters in an identifier
 int maxIntegerLength    = 10; // maximum number of characters in an integer
@@ -311,43 +311,75 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
-  SYMBOLS = malloc(32 * SIZEOFINTSTAR);
+  //  SYMBOLS = malloc(32 * SIZEOFINTSTAR);
   
-  *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
-    *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
-    *(SYMBOLS + SYM_VOID)         = (int) "void";
-    *(SYMBOLS + SYM_INT)          = (int) "int";
-    *(SYMBOLS + SYM_SEMICOLON)    = (int) ";";
-    *(SYMBOLS + SYM_IF)           = (int) "if";
-    *(SYMBOLS + SYM_ELSE)         = (int) "else";
-    *(SYMBOLS + SYM_PLUS)         = (int) "+";
-    *(SYMBOLS + SYM_MINUS)        = (int) "-";
-    *(SYMBOLS + SYM_ASTERISK)     = (int) "*";
-    *(SYMBOLS + SYM_DIV)          = (int) "/";
-    *(SYMBOLS + SYM_EQUALITY)     = (int) "==";
-    *(SYMBOLS + SYM_ASSIGN)       = (int) "=";
-    *(SYMBOLS + SYM_LPARENTHESIS) = (int) "(";
-    *(SYMBOLS + SYM_RPARENTHESIS) = (int) ")";
-    *(SYMBOLS + SYM_LBRACE)       = (int) "{";
-    *(SYMBOLS + SYM_RBRACE)       = (int) "}";
-    *(SYMBOLS + SYM_WHILE)        = (int) "while";
-    *(SYMBOLS + SYM_RETURN)       = (int) "return";
-    *(SYMBOLS + SYM_COMMA)        = (int) ",";
-    *(SYMBOLS + SYM_LT)           = (int) "<";
-    *(SYMBOLS + SYM_LEQ)          = (int) "<=";
-    *(SYMBOLS + SYM_GT)           = (int) ">";
-    *(SYMBOLS + SYM_GEQ)          = (int) ">=";
-    *(SYMBOLS + SYM_NOTEQ)        = (int) "!=";
-    *(SYMBOLS + SYM_MOD)          = (int) "%";
-    *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
-    *(SYMBOLS + SYM_STRING)       = (int) "string";
-    *(SYMBOLS + SYM_LSHIFT)       = (int) "<<";
-    *(SYMBOLS + SYM_RSHIFT)       = (int) ">>";
-    *(SYMBOLS + SYM_LBRACKET)     = (int) "[";
-    *(SYMBOLS + SYM_RBRACKET)     = (int) "]";
+//  *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
+//  *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
+//  *(SYMBOLS + SYM_VOID)         = (int) "void";
+//  *(SYMBOLS + SYM_INT)          = (int) "int";
+//  *(SYMBOLS + SYM_SEMICOLON)    = (int) ";";
+//  *(SYMBOLS + SYM_IF)           = (int) "if";
+//  *(SYMBOLS + SYM_ELSE)         = (int) "else";
+//  *(SYMBOLS + SYM_PLUS)         = (int) "+";
+//  *(SYMBOLS + SYM_MINUS)        = (int) "-";
+//  *(SYMBOLS + SYM_ASTERISK)     = (int) "*";
+//  *(SYMBOLS + SYM_DIV)          = (int) "/";
+//  *(SYMBOLS + SYM_EQUALITY)     = (int) "==";
+//  *(SYMBOLS + SYM_ASSIGN)       = (int) "=";
+//  *(SYMBOLS + SYM_LPARENTHESIS) = (int) "(";
+//  *(SYMBOLS + SYM_RPARENTHESIS) = (int) ")";
+//  *(SYMBOLS + SYM_LBRACE)       = (int) "{";
+//  *(SYMBOLS + SYM_RBRACE)       = (int) "}";
+//  *(SYMBOLS + SYM_WHILE)        = (int) "while";
+//  *(SYMBOLS + SYM_RETURN)       = (int) "return";
+//  *(SYMBOLS + SYM_COMMA)        = (int) ",";
+//  *(SYMBOLS + SYM_LT)           = (int) "<";
+//  *(SYMBOLS + SYM_LEQ)          = (int) "<=";
+//  *(SYMBOLS + SYM_GT)           = (int) ">";
+//  *(SYMBOLS + SYM_GEQ)          = (int) ">=";
+//  *(SYMBOLS + SYM_NOTEQ)        = (int) "!=";
+//  *(SYMBOLS + SYM_MOD)          = (int) "%";
+//  *(SYMBOLS + SYM_CHARACTER)    = (int) "character";
+//  *(SYMBOLS + SYM_STRING)       = (int) "string";
+//  *(SYMBOLS + SYM_LSHIFT)       = (int) "<<";
+//  *(SYMBOLS + SYM_RSHIFT)       = (int) ">>";
+//  *(SYMBOLS + SYM_LBRACKET)     = (int) "[";
+//  *(SYMBOLS + SYM_RBRACKET)     = (int) "]";
 
-    character = CHAR_EOF;
-    symbol    = SYM_EOF;
+  SYMBOLS[SYM_IDENTIFIER]   = (int) "identifier";
+  SYMBOLS[SYM_INTEGER]      = (int) "integer";
+  SYMBOLS[SYM_VOID]         = (int) "void";
+  SYMBOLS[SYM_INT]          = (int) "int";
+  SYMBOLS[SYM_SEMICOLON]    = (int) ";";
+  SYMBOLS[SYM_IF]           = (int) "if";
+  SYMBOLS[SYM_ELSE]         = (int) "else";
+  SYMBOLS[SYM_PLUS]         = (int) "+";
+  SYMBOLS[SYM_MINUS]        = (int) "-";
+  SYMBOLS[SYM_ASTERISK]     = (int) "*";
+  SYMBOLS[SYM_DIV]          = (int) "/";
+  SYMBOLS[SYM_EQUALITY]     = (int) "==";
+  SYMBOLS[SYM_ASSIGN]       = (int) "=";
+  SYMBOLS[SYM_LPARENTHESIS] = (int) "(";
+  SYMBOLS[SYM_RPARENTHESIS] = (int) ")";
+  SYMBOLS[SYM_LBRACE]       = (int) "{";
+  SYMBOLS[SYM_RBRACE]       = (int) "}";
+  SYMBOLS[SYM_WHILE]        = (int) "while";
+  SYMBOLS[SYM_RETURN]       = (int) "return";
+  SYMBOLS[SYM_COMMA]        = (int) ",";
+  SYMBOLS[SYM_LT]           = (int) "<";
+  SYMBOLS[SYM_LEQ]          = (int) "<=";
+  SYMBOLS[SYM_GT]           = (int) ">";
+  SYMBOLS[SYM_GEQ]          = (int) ">=";
+  SYMBOLS[SYM_NOTEQ]        = (int) "!=";
+  SYMBOLS[SYM_MOD]          = (int) "%";
+  SYMBOLS[SYM_CHARACTER]    = (int) "character";
+  SYMBOLS[SYM_STRING]       = (int) "string";
+  SYMBOLS[SYM_LSHIFT]       = (int) "<<";
+  SYMBOLS[SYM_RSHIFT]       = (int) ">>";
+  SYMBOLS[SYM_LBRACKET]     = (int) "[";
+  SYMBOLS[SYM_RBRACKET]     = (int) "]";
+  character = CHAR_EOF;
+  symbol    = SYM_EOF;
 }
 
 void resetScanner() {
@@ -3537,17 +3569,19 @@ void gr_statement() {
     // array
     if (symbol == SYM_LBRACKET) {
       getSymbol();
-      load_variable(variableOrProcedureName);
+      // load_variable(variableOrProcedureName);
 
+      entry = getVariable(variableOrProcedureName);
+      talloc();
+      emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));//FIXME is Immediate good here?
       atype = gr_expression();
 
       emitLeftShiftBy(2);
       emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
-      
+      tfree(1);
       if(atype != INT_T) {
         typeWarning(INT_T, atype);
       }
-      //      getSymbol();
 
       if(symbol != SYM_RBRACKET) {
         syntaxErrorSymbol(SYM_RBRACKET);
@@ -3560,7 +3594,6 @@ void gr_statement() {
 
           rtype = gr_expression();
 
-          //TODO
           if (rtype != getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)))
              typeWarning(getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)), rtype);
 
@@ -3958,6 +3991,7 @@ void gr_cstar() {
         // type identifier "(" procedure declaration or definition
         if (symbol == SYM_LPARENTHESIS)
           gr_procedure(variableOrProcedureName, type);
+        // type identifier "[" constant 
         else if(symbol == SYM_LBRACKET) {
           getSymbol();
           type = gr_shiftExpression(gr_attribute);
@@ -4381,7 +4415,7 @@ void emitInstruction(int instruction) {
 
 void emitRFormat(int opcode, int rs, int rt, int rd, int function) {
   emitInstruction(encodeRFormat(opcode, rs, rt, rd, function));
-
+  
   if (opcode == OP_SPECIAL) {
     if (function == FCT_JR)
       emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_NOP); // delay slot
