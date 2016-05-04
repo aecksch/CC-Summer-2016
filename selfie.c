@@ -2626,7 +2626,7 @@ int gr_factor(int* gr_attribute) {
   int hasCast;
   int cast;
   int type;
-
+  int* entry;
   int* variableOrProcedureName;
 
   // assert: n = allocatedTemporaries
@@ -2730,11 +2730,15 @@ int gr_factor(int* gr_attribute) {
       // array access
     } else if(symbol == SYM_LBRACKET){
       getSymbol();
-      load_variable(variableOrProcedureName);
-
+      //load_variable(variableOrProcedureName);
+      entry = getVariable(variableOrProcedureName);
+      talloc();
+      emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
       type = gr_expression();
 
       emitLeftShiftBy(2);
+      emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+      tfree(1);
       // dereference
       emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
