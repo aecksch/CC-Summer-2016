@@ -312,7 +312,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 
 void initScanner () {
   //  SYMBOLS = malloc(32 * SIZEOFINTSTAR);
-  
+
   *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
   *(SYMBOLS + SYM_INTEGER)      = (int) "integer";
   *(SYMBOLS + SYM_VOID)         = (int) "void";
@@ -3620,7 +3620,7 @@ void gr_statement() {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
-      
+
       ltype = getBaseType(getSymbolTableEntry(variableOrProcedureName,VARIABLE));
 
     } else if (symbol == SYM_LPARENTHESIS) { //call
@@ -3733,6 +3733,8 @@ int gr_variable(int offset) {
         syntaxErrorSymbol(SYM_RBRACKET);
       }
       getSymbol();
+
+    offset = offset - ((*gr_attribute - 1) * WORDSIZE);
 
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, *gr_attribute, type);
     } else
@@ -3921,8 +3923,8 @@ void gr_procedure(int* procedure, int returnType) {
     while (symbol == SYM_INT) {
       localVariables = localVariables + 1;
 
-      arrayOffset = gr_variable(-localVariables * WORDSIZE - arrayOffset * WORDSIZE);
-      totalArrayOffset = totalArrayOffset + arrayOffset;
+      arrayOffset = gr_variable(-localVariables * WORDSIZE);
+      localVariables = totalArrayOffset + localVariables;
 
       if (symbol == SYM_SEMICOLON)
         getSymbol();
@@ -4003,7 +4005,7 @@ void gr_cstar() {
         // type identifier "(" procedure declaration or definition
         if (symbol == SYM_LPARENTHESIS)
           gr_procedure(variableOrProcedureName, type);
-        // type identifier "[" constant 
+        // type identifier "[" constant
         else if(symbol == SYM_LBRACKET) {
           getSymbol();
           type = gr_shiftExpression(gr_attribute);
@@ -4011,7 +4013,7 @@ void gr_cstar() {
             syntaxErrorMessage((int*)"Array declaration should be constant!");
           }
           else {
-            allocatedMemory = allocatedMemory + (*gr_attribute * WORDSIZE);    
+            allocatedMemory = allocatedMemory + (*gr_attribute * WORDSIZE);
           }
 
           if(symbol != SYM_RBRACKET)
@@ -4021,7 +4023,7 @@ void gr_cstar() {
             // type identifier[expression] ";" global array declaration
           if (symbol == SYM_SEMICOLON) {
             createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, INTSTAR_T, 0, -allocatedMemory, *gr_attribute, type);
-        
+
             getSymbol();
           }
         } else {
@@ -4427,7 +4429,7 @@ void emitInstruction(int instruction) {
 
 void emitRFormat(int opcode, int rs, int rt, int rd, int function) {
   emitInstruction(encodeRFormat(opcode, rs, rt, rd, function));
-  
+
   if (opcode == OP_SPECIAL) {
     if (function == FCT_JR)
       emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_NOP); // delay slot
