@@ -2732,8 +2732,12 @@ int gr_factor(int* gr_attribute) {
       getSymbol();
       //load_variable(variableOrProcedureName);
       entry = getVariable(variableOrProcedureName);
-      talloc();
-      emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
+      if(getAddress(entry) > 0){
+        load_variable(variableOrProcedureName);
+      } else {
+        talloc();
+        emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
+      }
       type = gr_expression();
 
       emitLeftShiftBy(2);
@@ -2752,6 +2756,9 @@ int gr_factor(int* gr_attribute) {
     else {
       entry = getVariable(variableOrProcedureName);
       if(getSize(entry) > 0){
+        if(getAddress(entry) > 0){
+          type = load_variable(variableOrProcedureName);
+        }
         talloc();
         emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
         type = INTSTAR_T;
@@ -3584,8 +3591,13 @@ void gr_statement() {
       // load_variable(variableOrProcedureName);
 
       entry = getVariable(variableOrProcedureName);
-      talloc();
-      emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));//FIXME is Immediate good here?
+      // if parameter then we load because its an address
+      if(getAddress(entry) > 0){
+        load_variable(variableOrProcedureName);
+      } else {
+        talloc();
+        emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));//FIXME is Immediate good here?
+      }
       atype = gr_expression();
 
       emitLeftShiftBy(2);
@@ -3602,16 +3614,16 @@ void gr_statement() {
       getSymbol();
 
       if (symbol == SYM_ASSIGN) {
-          getSymbol();
+        getSymbol();
 
-          rtype = gr_expression();
+        rtype = gr_expression();
 
-          if (rtype != getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)))
-             typeWarning(getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)), rtype);
+        if (rtype != getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)))
+          typeWarning(getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)), rtype);
 
-          emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+        emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
 
-          tfree(2);
+        tfree(2);
 
       } else
         syntaxErrorSymbol(SYM_ASSIGN);
