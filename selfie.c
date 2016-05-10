@@ -4577,6 +4577,7 @@ int copyStringToBinary(int* s, int baddr) {
 void emitGlobalsStrings() {
   int* entry;
   int arraysize;
+  int arraysize2;
 
   entry = global_symbol_table;
 
@@ -4588,15 +4589,18 @@ void emitGlobalsStrings() {
       storeBinary(binaryLength, getValue(entry));
       if(getType(entry) == INTSTAR_T){
         arraysize = getSize(entry);
-        if(arraysize > 0)
-          binaryLength = binaryLength + (arraysize * WORDSIZE);
-        else
+        arraysize2 = getSize2(entry);
+        if(arraysize > 0) {
+          if(arraysize2 > 0){
+            binaryLength = binaryLength + (arraysize * arraysize2 * WORDSIZE);
+          } else
+            binaryLength = binaryLength + (arraysize * WORDSIZE);
+        } else
           binaryLength = binaryLength + WORDSIZE;
       } else
         binaryLength = binaryLength + WORDSIZE;
     } else if (getClass(entry) == STRING)
       binaryLength = copyStringToBinary(getString(entry), binaryLength);
-
     entry = getNextEntry(entry);
   }
 
