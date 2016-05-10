@@ -3772,7 +3772,12 @@ int gr_variable(int offset) {
         }
         getSymbol();
 
-    offset = offset - ((*gr_attribute - 1) * WORDSIZE);
+        if(*(gr_attribute) > 0) {
+            offset = offset - ((firstDimValue + (*gr_attribute - 1)) * WORDSIZE);
+        } else {
+            offset = offset - (firstDimValue * WORDSIZE);
+        }
+
 
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, firstDimValue, *gr_attribute, type);
   } } else
@@ -4052,8 +4057,7 @@ void gr_cstar() {
           type = gr_shiftExpression(gr_attribute);
           if(*(gr_attribute + 1) != 1) {
             syntaxErrorMessage((int*)"Array declaration should be constant!");
-          }
-          else {
+          } else {
             allocatedMemory = allocatedMemory + (*gr_attribute * WORDSIZE);
             firstDimValue = *gr_attribute;
             *gr_attribute = 0;
@@ -4069,8 +4073,7 @@ void gr_cstar() {
             type = gr_shiftExpression(gr_attribute);
             if(*(gr_attribute + 1) != 1) {
               syntaxErrorMessage((int*)"Array declaration should be constant!");
-            }
-            else {
+            } else {
               allocatedMemory = allocatedMemory + ((*gr_attribute - 1) * (firstDimValue * WORDSIZE));
             }
 
