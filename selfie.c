@@ -2018,7 +2018,7 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
   setValue(newEntry, value);
   setAddress(newEntry, address);
   setSize(newEntry, size);
-  setSize(newEntry, size2);
+  setSize2(newEntry, size2);
   setBaseType(newEntry, baseType);
 
   // create entry at head of symbol table
@@ -3741,6 +3741,7 @@ int gr_variable(int offset) {
       }
       firstDimValue = *gr_attribute;
       rvalue = *gr_attribute - 1;
+      *gr_attribute = 0;
       //Array should always be an integer
       if(atype != INT_T) {
         typeWarning(INT_T, atype);
