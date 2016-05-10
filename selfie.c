@@ -395,7 +395,7 @@ void resetScanner() {
 
 void resetSymbolTables();
 
-void createSymbolTableEntry(int which, int* string, int line, int class, int type, int value, int address, int size, int baseType);
+void createSymbolTableEntry(int which, int* string, int line, int class, int type, int value, int address, int size, int size2, int baseType);
 int* searchSymbolTable(int* entry, int* string, int class);
 int* getSymbolTableEntry(int* string, int class);
 
@@ -423,7 +423,8 @@ int  getValue(int* entry)      { return        *(entry + 5); }
 int  getAddress(int* entry)    { return        *(entry + 6); }
 int  getScope(int* entry)      { return        *(entry + 7); }
 int  getSize(int* entry)       { return        *(entry + 8); }
-int  getBaseType(int* entry)   { return        *(entry + 9); }
+int  getSize2(int* entry)      { return        *(entry + 9); }
+int  getBaseType(int* entry)   { return        *(entry + 10); }
 
 void setNextEntry(int* entry, int* next)    { *entry       = (int) next; }
 void setString(int* entry, int* identifier) { *(entry + 1) = (int) identifier; }
@@ -434,7 +435,8 @@ void setValue(int* entry, int value)        { *(entry + 5) = value; }
 void setAddress(int* entry, int address)    { *(entry + 6) = address; }
 void setScope(int* entry, int scope)        { *(entry + 7) = scope; }
 void setSize(int* entry, int size)          { *(entry + 8) = size; }
-void setBaseType(int* entry, int baseType)  { *(entry + 9) = baseType; }
+void setSize2(int* entry, int size)          { *(entry + 9) = size; }
+void setBaseType(int* entry, int baseType)  { *(entry + 10) = baseType; }
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -2004,7 +2006,7 @@ int getSymbol() {
 // ------------------------- SYMBOL TABLE --------------------------
 // -----------------------------------------------------------------
 
-void createSymbolTableEntry(int whichTable, int* string, int line, int class, int type, int value, int address, int size, int baseType) {
+void createSymbolTableEntry(int whichTable, int* string, int line, int class, int type, int value, int address, int size, int size2, int baseType) {
   int* newEntry;
 
   newEntry = malloc(2 * SIZEOFINTSTAR + 8 * SIZEOFINT);
@@ -2016,6 +2018,7 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
   setValue(newEntry, value);
   setAddress(newEntry, address);
   setSize(newEntry, size);
+  setSize(newEntry, size2);
   setBaseType(newEntry, baseType);
 
   // create entry at head of symbol table
@@ -3716,6 +3719,8 @@ int gr_variable(int offset) {
   int type;
   int atype;
   int rvalue;
+  int firstDimValue;
+
 
   rvalue = 0;
   type = gr_type();
@@ -3734,6 +3739,7 @@ int gr_variable(int offset) {
         println();
         exit(-1);
       }
+      firstDimValue = *gr_attribute;
       rvalue = *gr_attribute - 1;
       //Array should always be an integer
       if(atype != INT_T) {
@@ -3746,11 +3752,31 @@ int gr_variable(int offset) {
       }
       getSymbol();
 
+      if(symbol == SYM_LBRACKET) {
+        getSymbol();
+        atype = gr_shiftExpression(gr_attribute);
+        if(*(gr_attribute+1) == 0){
+          print((int*)"gr_avriable: constant expected in Array declaration");
+          println();
+          exit(-1);
+        }
+        rvalue = rvalue * *gr_attribute;
+        //Array should always be an integer
+        if(atype != INT_T) {
+          typeWarning(INT_T, atype);
+        }
+        type = INTSTAR_T;
+        //getSymbol();
+        if(symbol != SYM_RBRACKET) {
+          syntaxErrorSymbol(SYM_RBRACKET);
+        }
+        getSymbol();
+
     offset = offset - ((*gr_attribute - 1) * WORDSIZE);
 
-      createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, *gr_attribute, type);
+      createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, firstDimValue, *gr_attribute, type);
     } else
-      createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, 0, 0);
+      createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, 0, 0, 0);
 
     //    getSymbol();
   } else {
@@ -3834,7 +3860,7 @@ void gr_initialization(int* name, int offset, int type) {
   } else if (type != INT_T)
     typeWarning(type, INT_T);
 
-  createSymbolTableEntry(GLOBAL_TABLE, name, actualLineNumber, VARIABLE, type, initialValue, offset, 0, 0);
+  createSymbolTableEntry(GLOBAL_TABLE, name, actualLineNumber, VARIABLE, type, initialValue, offset, 0, 0, 0);
 }
 
 void gr_procedure(int* procedure, int returnType) {
@@ -3892,7 +3918,7 @@ void gr_procedure(int* procedure, int returnType) {
     entry = getSymbolTableEntry(currentProcedureName, PROCEDURE);
 
     if (entry == (int*) 0)
-      createSymbolTableEntry(GLOBAL_TABLE, currentProcedureName, lineNumber, PROCEDURE, returnType, 0, 0, 0, 0);
+      createSymbolTableEntry(GLOBAL_TABLE, currentProcedureName, lineNumber, PROCEDURE, returnType, 0, 0, 0, 0, 0);
 
     getSymbol();
 
@@ -3903,7 +3929,7 @@ void gr_procedure(int* procedure, int returnType) {
     entry = getSymbolTableEntry(currentProcedureName, PROCEDURE);
 
     if (entry == (int*) 0)
-      createSymbolTableEntry(GLOBAL_TABLE, currentProcedureName, lineNumber, PROCEDURE, returnType, 0, binaryLength, 0, 0);
+      createSymbolTableEntry(GLOBAL_TABLE, currentProcedureName, lineNumber, PROCEDURE, returnType, 0, binaryLength, 0, 0, 0);
     else {
       if (getAddress(entry) != 0) {
         if (getOpcode(loadBinary(getAddress(entry))) == OP_JAL)
@@ -3977,6 +4003,7 @@ void gr_procedure(int* procedure, int returnType) {
 void gr_cstar() {
   int type;
   int* variableOrProcedureName;
+  int firstDimValue;
 
   if(gr_attribute == (int*) 0) {
     gr_attribute = malloc(8);
@@ -4026,15 +4053,34 @@ void gr_cstar() {
           }
           else {
             allocatedMemory = allocatedMemory + (*gr_attribute * WORDSIZE);
+            firstDimValue = *gr_attribute;
+            *gr_attribute = 0;
           }
 
           if(symbol != SYM_RBRACKET)
             syntaxErrorSymbol(SYM_RBRACKET);
 
           getSymbol();
+
+          if(symbol == SYM_LBRACKET) {
+            getSymbol();
+            type = gr_shiftExpression(gr_attribute);
+            if(*(gr_attribute + 1) != 1) {
+              syntaxErrorMessage((int*)"Array declaration should be constant!");
+            }
+            else {
+              allocatedMemory = allocatedMemory + ((*gr_attribute - 1) * (firstDimValue * WORDSIZE));
+            }
+
+            if(symbol != SYM_RBRACKET)
+              syntaxErrorSymbol(SYM_RBRACKET);
+
+            getSymbol();
+
+          }
             // type identifier[expression] ";" global array declaration
           if (symbol == SYM_SEMICOLON) {
-            createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, INTSTAR_T, 0, -allocatedMemory, *gr_attribute, type);
+            createSymbolTableEntry(GLOBAL_TABLE, variableOrProcedureName, lineNumber, VARIABLE, INTSTAR_T, 0, -allocatedMemory, firstDimValue, *gr_attribute, type);
 
             getSymbol();
           }
