@@ -3775,7 +3775,7 @@ int gr_variable(int offset) {
     offset = offset - ((*gr_attribute - 1) * WORDSIZE);
 
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, firstDimValue, *gr_attribute, type);
-    } else
+  } } else
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, 0, 0, 0);
 
     //    getSymbol();
@@ -3784,7 +3784,7 @@ int gr_variable(int offset) {
 
     createSymbolTableEntry(LOCAL_TABLE, (int*) "missing variable name", lineNumber, VARIABLE, type, 0, offset, 0, 0, 0);
   }
-  }
+
   return rvalue;
 }
 
@@ -3876,8 +3876,6 @@ void gr_procedure(int* procedure, int returnType) {
   currentProcedureName = procedure;
 
   numberOfParameters = 0;
-
-  printf("test");
 
   // ( variable , variable ) ;
   if (symbol == SYM_LPARENTHESIS) {
