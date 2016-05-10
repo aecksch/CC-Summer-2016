@@ -3778,9 +3778,10 @@ int gr_variable(int offset) {
             offset = offset - (firstDimValue * WORDSIZE);
         }
 
+        }
 
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, firstDimValue, *gr_attribute, type);
-  } } else
+    } else
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, 0, 0, 0);
 
     //    getSymbol();
