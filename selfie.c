@@ -3877,7 +3877,7 @@ void gr_procedure(int* procedure, int returnType) {
   int localVariables;
   int functionStart;
   int* entry;
-  int arrayOffset;
+  // int arrayOffset;
   int totalArrayOffset;
 
   currentProcedureName = procedure;
@@ -3963,13 +3963,13 @@ void gr_procedure(int* procedure, int returnType) {
 
     localVariables = 0;
 
-    arrayOffset = 0;
+    // arrayOffset = 0;
     totalArrayOffset = 0;
 
     while (symbol == SYM_INT) {
       localVariables = localVariables + 1;
 
-      arrayOffset = gr_variable(-localVariables * WORDSIZE);
+      totalArrayOffset = gr_variable(-localVariables * WORDSIZE);
       localVariables = totalArrayOffset + localVariables;
 
       if (symbol == SYM_SEMICOLON)
