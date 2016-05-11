@@ -3746,7 +3746,7 @@ int gr_variable(int offset) {
       if(atype != INT_T) {
         typeWarning(INT_T, atype);
       }
-      type = INTSTAR_T;
+      //type = INTSTAR_T;
       //getSymbol();
       if(symbol != SYM_RBRACKET) {
         syntaxErrorSymbol(SYM_RBRACKET);
@@ -3766,22 +3766,21 @@ int gr_variable(int offset) {
         if(atype != INT_T) {
           typeWarning(INT_T, atype);
         }
-        type = INTSTAR_T;
+        //type = INTSTAR_T;
         //getSymbol();
         if(symbol != SYM_RBRACKET) {
           syntaxErrorSymbol(SYM_RBRACKET);
         }
         getSymbol();
+      }
 
-        if(*(gr_attribute) > 0) {
-            offset = offset - ((firstDimValue + (*gr_attribute - 1)) * WORDSIZE);
-        } else {
-            offset = offset - (firstDimValue * WORDSIZE);
-        }
+      if(*(gr_attribute) > 0) {
+        offset = offset - ((firstDimValue + (*gr_attribute - 1)) * WORDSIZE);
+      } else {
+        offset = offset - ((firstDimValue-1) * WORDSIZE);
+      }
 
-        }
-
-      createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, firstDimValue, *gr_attribute, type);
+      createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, INTSTAR_T, 0, offset, firstDimValue, *gr_attribute, type);
     } else
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, 0, 0, 0);
 
