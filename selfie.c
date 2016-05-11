@@ -2800,10 +2800,7 @@ int gr_factor(int* gr_attribute) {
       type = gr_expression();
 
       emitLeftShiftBy(2);
-      load_integer(getSize2(entry));
-      emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
-      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-      tfree(1);
+
       // emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
       // tfree(1);
 
@@ -2814,6 +2811,10 @@ int gr_factor(int* gr_attribute) {
         syntaxErrorSymbol(SYM_RBRACKET);
 
       if(symbol == SYM_LBRACKET){
+          load_integer(getSize2(entry));
+          emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
+          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+          tfree(1);
         getSymbol();
         type = gr_expression();
 
@@ -2946,10 +2947,6 @@ int gr_term(int* gr_attribute) {
               rconst = rconst * *gr_attribute;
               rIsConst = 1;
             }
-            // load_integer(*gr_attribute);
-            // emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), 0, FCT_MULTU);
-            // emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-            // tfree(1);
           } else {
             currentValue = currentValue * *gr_attribute;
           }
@@ -3009,7 +3006,7 @@ int gr_term(int* gr_attribute) {
             emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFHI);
             tfree(1);
           } else {
-            currentValue = currentValue / *gr_attribute;
+            currentValue = currentValue % *gr_attribute;
           }
         } else {
           if(wasVariable == 1) {
@@ -3676,6 +3673,9 @@ void gr_statement() {
 
       entry = getVariable(variableOrProcedureName);
       // if parameter then we load because its an address
+    //   print("Address of Array: ");
+    //   print(itoa(getAddress(entry), string_buffer, 10, 0, 0));
+    //   println();
       if(getAddress(entry) > 0){
         load_variable(variableOrProcedureName);
       } else {
@@ -3685,10 +3685,6 @@ void gr_statement() {
       atype = gr_expression();
 
       emitLeftShiftBy(2);
-      load_integer(getSize2(entry));
-      emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
-      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-      tfree(1);
       // emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
       // tfree(1);
       if(atype != INT_T) {
@@ -3703,6 +3699,10 @@ void gr_statement() {
 
       if (symbol == SYM_LBRACKET) {
         getSymbol();
+        load_integer(getSize2(entry));
+        emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
+        emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+        tfree(1);
 
         atype = gr_expression();
 
@@ -3854,7 +3854,7 @@ int gr_variable(int offset) {
       if(atype != INT_T) {
         typeWarning(INT_T, atype);
       }
-      //type = INTSTAR_T;
+      type = INTSTAR_T;
       //getSymbol();
       if(symbol != SYM_RBRACKET) {
         syntaxErrorSymbol(SYM_RBRACKET);
@@ -3874,8 +3874,8 @@ int gr_variable(int offset) {
         if(atype != INT_T) {
           typeWarning(INT_T, atype);
         }
-        //type = INTSTAR_T;
-        //getSymbol();
+
+
         if(symbol != SYM_RBRACKET) {
           syntaxErrorSymbol(SYM_RBRACKET);
         }
