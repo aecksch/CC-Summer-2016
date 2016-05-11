@@ -444,7 +444,7 @@ void setValue(int* entry, int value)        { *(entry + 5) = value; }
 void setAddress(int* entry, int address)    { *(entry + 6) = address; }
 void setScope(int* entry, int scope)        { *(entry + 7) = scope; }
 void setSize(int* entry, int size)          { *(entry + 8) = size; }
-void setSize2(int* entry, int size)          { *(entry + 9) = size; }
+void setSize2(int* entry, int size)         { *(entry + 9) = size; }
 void setBaseType(int* entry, int baseType)  { *(entry + 10) = baseType; }
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
@@ -2753,8 +2753,12 @@ int gr_factor(int* gr_attribute) {
       type = gr_expression();
 
       emitLeftShiftBy(2);
-      emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+      load_integer(getSize2(entry));
+      emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), 0, FCT_MULTU);
+      emitRFormat(OP_SPECIAL, 0, 0, currentTemporary(), FCT_MFLO);
       tfree(1);
+      // emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+      // tfree(1);
 
 
       if(symbol == SYM_RBRACKET)
@@ -2777,6 +2781,9 @@ int gr_factor(int* gr_attribute) {
           syntaxErrorSymbol(SYM_RBRACKET);
 
       }
+
+      emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+      tfree(1);
 
       // dereference
       emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
@@ -3631,8 +3638,16 @@ void gr_statement() {
       atype = gr_expression();
 
       emitLeftShiftBy(2);
-      emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+      print(identifier);
+      println();
+      print(itoa(getSize2(entry), string_buffer, 10, 0, 0));
+      println();
+      load_integer(getSize2(entry));
+      emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), 0, FCT_MULTU);
+      emitRFormat(OP_SPECIAL, 0, 0, currentTemporary(), FCT_MFLO);
       tfree(1);
+      // emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+      // tfree(1);
       if(atype != INT_T) {
         typeWarning(INT_T, atype);
       }
@@ -3662,6 +3677,9 @@ void gr_statement() {
         getSymbol();
 
       }
+
+      emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+      tfree(1);
 
       if (symbol == SYM_ASSIGN) {
         getSymbol();
