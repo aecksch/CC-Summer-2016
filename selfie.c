@@ -2054,7 +2054,7 @@ int getSymbol() {
 
     exit(-1);
   }
-
+  
   return symbol;
 }
 
@@ -7221,6 +7221,7 @@ void boot(int argc, int* argv) {
 // -----------------------------------------------------------------
 
 int selfie(int argc, int* argv) {
+  int i;
   if (argc < 2)
     return -1;
   else {
@@ -7233,6 +7234,16 @@ int selfie(int argc, int* argv) {
         argv = argv + 2;
 
         selfie_compile();
+        i=0;
+        while(i < 32){
+          print((int*) "symbol " );
+          print(SYMBOLS[i][0]);
+          print((int*) " --> ");
+          print(itoa(SYMBOLS[i][1],string_buffer,10,0,0));
+          println();
+          i = i + 1;
+        }
+        
       } else if (stringCompare((int*) *argv, (int*) "-o")) {
         binaryName = (int*) *(argv+1);
 
