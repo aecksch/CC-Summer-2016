@@ -2746,8 +2746,6 @@ int gr_factor(int* gr_attribute) {
       emitLeftShiftBy(2);
       emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
       tfree(1);
-      // dereference
-      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
 
       if(symbol == SYM_RBRACKET)
@@ -2771,8 +2769,8 @@ int gr_factor(int* gr_attribute) {
         emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
         tfree(1);
 
-        emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
-        tfree(1);
+        // emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+        // tfree(1);
 
 
         if(symbol == SYM_RBRACKET)
@@ -2781,7 +2779,7 @@ int gr_factor(int* gr_attribute) {
           syntaxErrorSymbol(SYM_RBRACKET);
 
       }
-      
+
       // dereference
       emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
@@ -3672,8 +3670,8 @@ void gr_statement() {
           syntaxErrorSymbol(SYM_RBRACKET);
         }
 
-        emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
-        tfree(1);
+        // emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+        // tfree(1);
 
         getSymbol();
 
