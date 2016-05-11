@@ -2754,6 +2754,37 @@ int gr_factor(int* gr_attribute) {
         getSymbol();
       else
         syntaxErrorSymbol(SYM_RBRACKET);
+
+      if(symbol == SYM_LBRACKET){
+        getSymbol();
+        //load_variable(variableOrProcedureName);
+        // entry = getVariable(variableOrProcedureName);
+        // if(getAddress(entry) > 0){
+        //   load_variable(variableOrProcedureName);
+        // } else {
+        //   talloc();
+        //   emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
+        // }
+        type = gr_expression();
+
+        emitLeftShiftBy(2);
+        emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+        tfree(1);
+
+        emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+        tfree(1);
+
+
+        if(symbol == SYM_RBRACKET)
+          getSymbol();
+        else
+          syntaxErrorSymbol(SYM_RBRACKET);
+
+      }
+      
+      // dereference
+      emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+
     }
     //*(identifier
     else {
@@ -3615,6 +3646,38 @@ void gr_statement() {
       }
 
       getSymbol();
+
+      if (symbol == SYM_LBRACKET) {
+        getSymbol();
+        // load_variable(variableOrProcedureName);
+
+        // entry = getVariable(variableOrProcedureName);
+        // if parameter then we load because its an address
+        // if(getAddress(entry) > 0){
+        //   load_variable(variableOrProcedureName);
+        // } else {
+        //   talloc();
+        //   emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));//FIXME is Immediate good here?
+        // }
+        atype = gr_expression();
+
+        emitLeftShiftBy(2);
+        emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+        tfree(1);
+        if(atype != INT_T) {
+          typeWarning(INT_T, atype);
+        }
+
+        if(symbol != SYM_RBRACKET) {
+          syntaxErrorSymbol(SYM_RBRACKET);
+        }
+
+        emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+        tfree(1);
+
+        getSymbol();
+
+      }
 
       if (symbol == SYM_ASSIGN) {
         getSymbol();
