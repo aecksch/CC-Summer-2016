@@ -2754,8 +2754,8 @@ int gr_factor(int* gr_attribute) {
 
       emitLeftShiftBy(2);
       load_integer(getSize2(entry));
-      emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), 0, FCT_MULTU);
-      emitRFormat(OP_SPECIAL, 0, 0, currentTemporary(), FCT_MFLO);
+      emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
+      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
       tfree(1);
       // emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
       // tfree(1);
@@ -3643,8 +3643,8 @@ void gr_statement() {
       print(itoa(getSize2(entry), string_buffer, 10, 0, 0));
       println();
       load_integer(getSize2(entry));
-      emitRFormat(OP_SPECIAL, currentTemporary(), nextTemporary(), 0, FCT_MULTU);
-      emitRFormat(OP_SPECIAL, 0, 0, currentTemporary(), FCT_MFLO);
+      emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
+      emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
       tfree(1);
       // emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
       // tfree(1);
@@ -3662,6 +3662,9 @@ void gr_statement() {
         getSymbol();
 
         atype = gr_expression();
+
+        print("test");
+        println();
 
         emitLeftShiftBy(2);
         emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
