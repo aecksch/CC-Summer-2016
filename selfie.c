@@ -3775,7 +3775,8 @@ int gr_variable(int offset) {
       }
 
       if(*(gr_attribute) > 0) {
-        offset = offset - ((firstDimValue + (*gr_attribute - 1)) * WORDSIZE);
+        print("Test");
+        offset = offset - ((firstDimValue * (*gr_attribute - 1)) * WORDSIZE);
       } else {
         offset = offset - ((firstDimValue-1) * WORDSIZE);
       }
