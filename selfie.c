@@ -311,6 +311,7 @@ int  sourceFD   = 0;        // file descriptor of open source file
 // ------------------------- INITIALIZATION ------------------------
 
 void initScanner () {
+    int i;
   // //  SYMBOLS = malloc(32 * SIZEOFINTSTAR);
   //
   // *(SYMBOLS + SYM_IDENTIFIER)   = (int) "identifier";
@@ -379,12 +380,12 @@ void initScanner () {
      SYMBOLS[SYM_LBRACKET][0]     = (int) "[";
      SYMBOLS[SYM_RBRACKET][0]     = (int) "]";
 
-    //  int i;
-    //  i = SYM_IDENTIFIER;
-    //  while(i < 32) {
-    //      SYMBOLS[i][1] = 0;
-    //      i = i + 1;
-    //   }
+
+     i = SYM_IDENTIFIER;
+     while(i < 32) {
+         SYMBOLS[i][1] = 0;
+         i = i + 1;
+      }
 
 
       character = CHAR_EOF;
@@ -1742,20 +1743,38 @@ int identifierStringMatch(int keyword) {
 }
 
 int identifierOrKeyword() {
-  if (identifierStringMatch(SYM_WHILE))
-    return SYM_WHILE;
-  if (identifierStringMatch(SYM_IF))
-    return SYM_IF;
-  if (identifierStringMatch(SYM_INT))
-    return SYM_INT;
-  if (identifierStringMatch(SYM_ELSE))
-    return SYM_ELSE;
-  if (identifierStringMatch(SYM_RETURN))
-    return SYM_RETURN;
-  if (identifierStringMatch(SYM_VOID))
-    return SYM_VOID;
-  else
-    return SYM_IDENTIFIER;
+  if (identifierStringMatch(SYM_WHILE)) {
+      SYMBOLS[SYM_WHILE][1] = SYMBOLS[SYM_WHILE][1] + 1;
+      return SYM_WHILE;
+  }
+
+  if (identifierStringMatch(SYM_IF)) {
+      SYMBOLS[SYM_IF][1] = SYMBOLS[SYM_IF][1] + 1;
+      return SYM_IF;
+  }
+
+  if (identifierStringMatch(SYM_INT)) {
+      SYMBOLS[SYM_INT][1] = SYMBOLS[SYM_INT][1] + 1;
+      return SYM_INT;
+  }
+
+  if (identifierStringMatch(SYM_ELSE)) {
+      SYMBOLS[SYM_ELSE][1] = SYMBOLS[SYM_ELSE][1] + 1;
+      return SYM_ELSE;
+  }
+
+  if (identifierStringMatch(SYM_RETURN)) {
+      SYMBOLS[SYM_RETURN][1] = SYMBOLS[SYM_RETURN][1] + 1;
+      return SYM_RETURN;
+  }
+
+  if (identifierStringMatch(SYM_VOID)) {
+      SYMBOLS[SYM_VOID][1] = SYMBOLS[SYM_VOID][1] + 1;
+      return SYM_VOID;
+  }
+
+  SYMBOLS[SYM_IDENTIFIER][1] = SYMBOLS[SYM_IDENTIFIER][1] + 1;
+  return SYM_IDENTIFIER;
 }
 
 int getSymbol() {
@@ -1831,6 +1850,7 @@ int getSymbol() {
       }
     }
 
+    SYMBOLS[SYM_INTEGER][1] = SYMBOLS[SYM_INTEGER][1] + 1;
     symbol = SYM_INTEGER;
 
   } else if (character == CHAR_SINGLEQUOTE) {
@@ -1856,6 +1876,7 @@ int getSymbol() {
     } else
       syntaxErrorCharacter(CHAR_SINGLEQUOTE);
 
+    SYMBOLS[SYM_CHARACTER][1] = SYMBOLS[SYM_CHARACTER][1] + 1;
     symbol = SYM_CHARACTER;
 
   } else if (character == CHAR_DOUBLEQUOTE) {
@@ -1889,26 +1910,31 @@ int getSymbol() {
 
     storeCharacter(string, i, 0); // null terminated string
 
+    SYMBOLS[SYM_STRING][1] = SYMBOLS[SYM_STRING][1] + 1;
     symbol = SYM_STRING;
 
   } else if (character == CHAR_SEMICOLON) {
     getCharacter();
 
+    SYMBOLS[SYM_SEMICOLON][1] = SYMBOLS[SYM_SEMICOLON][1] + 1;
     symbol = SYM_SEMICOLON;
 
   } else if (character == CHAR_PLUS) {
     getCharacter();
 
+    SYMBOLS[SYM_PLUS][1] = SYMBOLS[SYM_PLUS][1] + 1;
     symbol = SYM_PLUS;
 
   } else if (character == CHAR_DASH) {
     getCharacter();
 
+    SYMBOLS[SYM_MINUS][1] = SYMBOLS[SYM_MINUS][1] + 1;
     symbol = SYM_MINUS;
 
   } else if (character == CHAR_ASTERISK) {
     getCharacter();
 
+    SYMBOLS[SYM_ASTERISK][1] = SYMBOLS[SYM_ASTERISK][1] + 1;
     symbol = SYM_ASTERISK;
 
   } else if (character == CHAR_EQUAL) {
@@ -1917,33 +1943,41 @@ int getSymbol() {
     if (character == CHAR_EQUAL) {
       getCharacter();
 
+      SYMBOLS[SYM_EQUALITY][1] = SYMBOLS[SYM_EQUALITY][1] + 1;
       symbol = SYM_EQUALITY;
-    } else
+    } else {
+      SYMBOLS[SYM_ASSIGN][1] = SYMBOLS[SYM_ASSIGN][1] + 1;
       symbol = SYM_ASSIGN;
+    }
 
   } else if (character == CHAR_LPARENTHESIS) {
     getCharacter();
 
+    SYMBOLS[SYM_LPARENTHESIS][1] = SYMBOLS[SYM_LPARENTHESIS][1] + 1;
     symbol = SYM_LPARENTHESIS;
 
   } else if (character == CHAR_RPARENTHESIS) {
     getCharacter();
 
+    SYMBOLS[SYM_RPARENTHESIS][1] = SYMBOLS[SYM_RPARENTHESIS][1] + 1;
     symbol = SYM_RPARENTHESIS;
 
   } else if (character == CHAR_LBRACE) {
     getCharacter();
 
+    SYMBOLS[SYM_LBRACE][1] = SYMBOLS[SYM_LBRACE][1] + 1;
     symbol = SYM_LBRACE;
 
   } else if (character == CHAR_RBRACE) {
     getCharacter();
 
+    SYMBOLS[SYM_RBRACE][1] = SYMBOLS[SYM_RBRACE][1] + 1;
     symbol = SYM_RBRACE;
 
   } else if (character == CHAR_COMMA) {
     getCharacter();
 
+    SYMBOLS[SYM_COMMA][1] = SYMBOLS[SYM_COMMA][1] + 1;
     symbol = SYM_COMMA;
 
   } else if (character == CHAR_LT) {
@@ -1952,12 +1986,17 @@ int getSymbol() {
     if (character == CHAR_EQUAL) {
       getCharacter();
 
+      SYMBOLS[SYM_LEQ][1] = SYMBOLS[SYM_LEQ][1] + 1;
       symbol = SYM_LEQ;
     } else if(character == CHAR_LT) {
       getCharacter();
+      SYMBOLS[SYM_LSHIFT][1] = SYMBOLS[SYM_LSHIFT][1] + 1;
       symbol = SYM_LSHIFT;
-    } else
+    } else {
+      SYMBOLS[SYM_LT][1] = SYMBOLS[SYM_LT][1] + 1;
       symbol = SYM_LT;
+    }
+
 
   } else if (character == CHAR_GT) {
     getCharacter();
@@ -1965,13 +2004,17 @@ int getSymbol() {
     if (character == CHAR_EQUAL) {
       getCharacter();
 
+      SYMBOLS[SYM_GEQ][1] = SYMBOLS[SYM_GEQ][1] + 1;
       symbol = SYM_GEQ;
     } else if (character == CHAR_GT) {
       getCharacter();
 
+      SYMBOLS[SYM_RSHIFT][1] = SYMBOLS[SYM_RSHIFT][1] + 1;
       symbol = SYM_RSHIFT;
-    } else
+    } else {
+      SYMBOLS[SYM_GT][1] = SYMBOLS[SYM_GT][1] + 1;
       symbol = SYM_GT;
+    }
 
   } else if (character == CHAR_EXCLAMATION) {
     getCharacter();
@@ -1981,21 +2024,25 @@ int getSymbol() {
     else
       syntaxErrorCharacter(CHAR_EQUAL);
 
+    SYMBOLS[SYM_NOTEQ][1] = SYMBOLS[SYM_NOTEQ][1] + 1;
     symbol = SYM_NOTEQ;
 
   } else if (character == CHAR_PERCENTAGE) {
     getCharacter();
 
+    SYMBOLS[SYM_MOD][1] = SYMBOLS[SYM_MOD][1] + 1;
     symbol = SYM_MOD;
 
   } else if (character == CHAR_RBRACKET) {
     getCharacter();
 
+    SYMBOLS[SYM_RBRACKET][1] = SYMBOLS[SYM_RBRACKET][1] + 1;
     symbol = SYM_RBRACKET;
 
   } else if (character == CHAR_LBRACKET) {
     getCharacter();
 
+    SYMBOLS[SYM_LBRACKET][1] = SYMBOLS[SYM_LBRACKET][1] + 1;
     symbol = SYM_LBRACKET;
 
   } else {
@@ -3638,10 +3685,6 @@ void gr_statement() {
       atype = gr_expression();
 
       emitLeftShiftBy(2);
-      print(identifier);
-      println();
-      print(itoa(getSize2(entry), string_buffer, 10, 0, 0));
-      println();
       load_integer(getSize2(entry));
       emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
       emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
@@ -3662,9 +3705,6 @@ void gr_statement() {
         getSymbol();
 
         atype = gr_expression();
-
-        print("test");
-        println();
 
         emitLeftShiftBy(2);
         emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
