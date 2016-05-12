@@ -509,7 +509,7 @@ void load_integer(int value);
 void load_string(int* string);
 
 int  help_call_codegen(int* entry, int* procedure);
-void help_procedure_prologue(int localVariables,int arrayOffset);
+void help_procedure_prologue(int localVariables);
 void help_procedure_epilogue(int parameters);
 
 int  gr_call(int* procedure);
@@ -2571,7 +2571,7 @@ int help_call_codegen(int* entry, int* procedure) {
   return type;
 }
 
-void help_procedure_prologue(int localVariables,int arrayOffset) {
+void help_procedure_prologue(int localVariables) {
   // allocate space for return address
   emitIFormat(OP_ADDIU, REG_SP, REG_SP, -WORDSIZE);
 
@@ -2589,7 +2589,7 @@ void help_procedure_prologue(int localVariables,int arrayOffset) {
 
   // allocate space for callee's local variables
   if (localVariables != 0)
-    emitIFormat(OP_ADDIU, REG_SP, REG_SP, -localVariables * WORDSIZE - (arrayOffset * WORDSIZE));
+    emitIFormat(OP_ADDIU, REG_SP, REG_SP, -localVariables * WORDSIZE);
 }
 
 void help_procedure_epilogue(int parameters) {
@@ -3848,7 +3848,7 @@ int gr_variable(int offset) {
         exit(-1);
       }
       firstDimValue = *gr_attribute;
-      rvalue = *gr_attribute - 1;
+      rvalue = *gr_attribute;
       *gr_attribute = 0;
       //Array should always be an integer
       if(atype != INT_T) {
@@ -3883,15 +3883,16 @@ int gr_variable(int offset) {
       }
 
       if(*(gr_attribute) > 0) {
-        print("Test");
-        offset = offset - ((firstDimValue * (*gr_attribute - 1)) * WORDSIZE);
+        offset = offset - ((firstDimValue * *gr_attribute) * WORDSIZE);
       } else {
-        offset = offset - ((firstDimValue-1) * WORDSIZE);
+        offset = offset - (firstDimValue * WORDSIZE);
       }
 
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, INTSTAR_T, 0, offset, firstDimValue, *gr_attribute, type);
-    } else
-      createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset, 0, 0, 0);
+    } else {
+      rvalue = 1;
+      createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset - WORDSIZE, 0, 0, 0);
+    }
 
     //    getSymbol();
   } else {
@@ -3982,11 +3983,10 @@ void gr_initialization(int* name, int offset, int type) {
 void gr_procedure(int* procedure, int returnType) {
   int numberOfParameters;
   int parameters;
-  int localVariables;
+  int varOffset;
   int functionStart;
   int* entry;
-  // int arrayOffset;
-  int totalArrayOffset;
+  int totalOffset;
 
   currentProcedureName = procedure;
 
@@ -4069,16 +4069,16 @@ void gr_procedure(int* procedure, int returnType) {
 
     getSymbol();
 
-    localVariables = 0;
+    varOffset = 0;
 
     // arrayOffset = 0;
-    totalArrayOffset = 0;
+    totalOffset = 0;
 
     while (symbol == SYM_INT) {
-      localVariables = localVariables + 1;
+      //      varOffset = localVariables + 1;
 
-      totalArrayOffset = gr_variable(-localVariables * WORDSIZE);
-      localVariables = totalArrayOffset + localVariables;
+      varOffset = gr_variable(-totalOffset * WORDSIZE);
+      totalOffset = totalOffset + varOffset;
 
       if (symbol == SYM_SEMICOLON)
         getSymbol();
@@ -4086,7 +4086,7 @@ void gr_procedure(int* procedure, int returnType) {
         syntaxErrorSymbol(SYM_SEMICOLON);
     }
 
-    help_procedure_prologue(localVariables,totalArrayOffset);
+    help_procedure_prologue(totalOffset);
 
     // create a fixup chain for return statements
     returnBranches = 0;
