@@ -418,7 +418,7 @@ int reportUndefinedProcedures();
 // |  1 | string  | identifier string, string literal
 // |  2 | line#   | source line number
 // |  3 | class   | VARIABLE, PROCEDURE, STRING
-// |  4 | type    | INT_T, INTSTAR_T, VOID_T
+// |  4 | type    | INT_T, INTSTAR_T, VOID_T, ARRAY_T
 // |  5 | value   | VARIABLE: initial value
 // |  6 | address | VARIABLE: offset, PROCEDURE: address, STRING: offset
 // |  7 | scope   | REG_GP, REG_FP
@@ -2789,11 +2789,13 @@ int gr_factor(int* gr_attribute) {
       // array access
     } else if(symbol == SYM_LBRACKET){
       getSymbol();
-      //load_variable(variableOrProcedureName);
       entry = getVariable(variableOrProcedureName);
-      if(getAddress(entry) > 0){
+   
+      if(getAddress(entry) > 0){ //if its a function parameter we have to load it because its an adress
         load_variable(variableOrProcedureName);
-      } else {
+      } else if(getSize(entry) == 0) { //if we access an pointer like an array we have to load
+        load_variable(variableOrProcedureName);
+      } else { 
         talloc();
         emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
       }
@@ -2811,10 +2813,10 @@ int gr_factor(int* gr_attribute) {
         syntaxErrorSymbol(SYM_RBRACKET);
 
       if(symbol == SYM_LBRACKET){
-          load_integer(getSize2(entry));
-          emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
-          emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-          tfree(1);
+        load_integer(getSize2(entry));
+        emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
+        emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+        tfree(1);
         getSymbol();
         type = gr_expression();
 
@@ -2837,16 +2839,16 @@ int gr_factor(int* gr_attribute) {
       emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
     }
-    //*(identifier
     else {
       entry = getVariable(variableOrProcedureName);
       if(getSize(entry) > 0){
         if(getAddress(entry) > 0){
           type = load_variable(variableOrProcedureName);
+        } else {
+          talloc();
+          emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
+          type = INTSTAR_T;
         }
-        talloc();
-        emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
-        type = INTSTAR_T;
       } else {
       // variable access: identifier
         type = load_variable(variableOrProcedureName);
@@ -3677,6 +3679,8 @@ void gr_statement() {
     //   print(itoa(getAddress(entry), string_buffer, 10, 0, 0));
     //   println();
       if(getAddress(entry) > 0){
+        load_variable(variableOrProcedureName);
+      } else if(getSize(entry) == 0) { //if we access an pointer like an array we have to load
         load_variable(variableOrProcedureName);
       } else {
         talloc();
