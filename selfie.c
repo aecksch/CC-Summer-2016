@@ -391,10 +391,10 @@ int reportUndefinedProcedures();
 // |  7 | scope   | REG_GP, REG_FP
 // |  8 | size    | array size of first dimension
 // |  9 | size2   | array size if second dimension
-// | 10 | basetype| type of elements stored in the array 
+// | 10 | basetype| type of elements stored in the array
 // +----+---------+
 
-int* getNextEntry(int* entry)  { return (int*) *entry; }
+int* getNextEntry(int* entry)  { return (int*) *entry;       }
 int* getString(int* entry)     { return (int*) *(entry + 1); }
 int  getLineNumber(int* entry) { return        *(entry + 2); }
 int  getClass(int* entry)      { return        *(entry + 3); }
@@ -404,19 +404,33 @@ int  getAddress(int* entry)    { return        *(entry + 6); }
 int  getScope(int* entry)      { return        *(entry + 7); }
 int  getSize(int* entry)       { return        *(entry + 8); }
 int  getSize2(int* entry)      { return        *(entry + 9); }
-int  getBaseType(int* entry)   { return        *(entry + 10); }
+int  getBaseType(int* entry)   { return        *(entry + 10);}
+int* getFields(int* entry)     { return (int*) *(entry + 11);}
+
+int* getNextField(int* field)  { return (int*) *field;       }
+int* getFieldName(int* field)  { return (int*) *(field + 1); }
+int  getFieldType(int* field)  { return        *(field + 2); }
+int  getFieldSize(int* field)  { return        *(field + 3); }
+int  getFieldSize2(int* field) { return        *(field + 4); }
 
 void setNextEntry(int* entry, int* next)    { *entry       = (int) next; }
 void setString(int* entry, int* identifier) { *(entry + 1) = (int) identifier; }
-void setLineNumber(int* entry, int line)    { *(entry + 2) = line; }
-void setClass(int* entry, int class)        { *(entry + 3) = class; }
-void setType(int* entry, int type)          { *(entry + 4) = type; }
-void setValue(int* entry, int value)        { *(entry + 5) = value; }
-void setAddress(int* entry, int address)    { *(entry + 6) = address; }
-void setScope(int* entry, int scope)        { *(entry + 7) = scope; }
-void setSize(int* entry, int size)          { *(entry + 8) = size; }
-void setSize2(int* entry, int size)         { *(entry + 9) = size; }
-void setBaseType(int* entry, int baseType)  { *(entry + 10) = baseType; }
+void setLineNumber(int* entry, int line)      { *(entry + 2)  = line; }
+void setClass(int* entry, int class)          { *(entry + 3)  = class; }
+void setType(int* entry, int type)            { *(entry + 4)  = type; }
+void setValue(int* entry, int value)          { *(entry + 5)  = value; }
+void setAddress(int* entry, int address)      { *(entry + 6)  = address; }
+void setScope(int* entry, int scope)          { *(entry + 7)  = scope; }
+void setSize(int* entry, int size)            { *(entry + 8)  = size; }
+void setSize2(int* entry, int size)           { *(entry + 9)  = size; }
+void setBaseType(int* entry, int baseType)    { *(entry + 10) = baseType; }
+void setFields(int* entry, int* field)        { *(entry + 11) = (int) field; }
+
+void setNextField(int* field, int* next)      { *field = (int) next; }
+void setFieldName(int* field, int* identifier){ *(field + 1) = (int) identifier; }
+void setFieldType(int* field, int type)       { *(field + 2) = type; }
+void setFieldSize(int* field, int size)       { *(field + 3) = size; }
+void setFieldSize2(int* field, int size2)     { *(field + 4) = size2; }
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -429,6 +443,7 @@ int STRING    = 3;
 int INT_T     = 1;
 int INTSTAR_T = 2;
 int VOID_T    = 3;
+int STRUCT_T  = 4;
 
 // symbol tables
 int GLOBAL_TABLE  = 1;
@@ -464,6 +479,7 @@ int isComparison();
 int lookForFactor();
 int lookForStatement();
 int lookForType();
+int lookForFields();
 
 void save_temporaries();
 void restore_temporaries(int numberOfTemporaries);
@@ -1213,23 +1229,23 @@ int twoToThePowerOf(int p) {
 }
 
 int leftShift(int n, int b) {
-    // assert: b >= 0;
-    return n << b;
+  // assert: b >= 0;
+  return n << b;
 
 }
 
 int rightShift(int n, int b) {
   // assert: b >= 0
 
-    if (n >= 0) {
-        if (b < 31)
-            return n >> b;
-        else
-            return 0;
-    }  else if (b < 31)
+  if (n >= 0) {
+    if (b < 31)
+      return n >> b;
+    else
+      return 0;
+  }  else if (b < 31)
     // works even if n == INT_MIN:
     // shift right n with msb reset and then restore msb
-      return (((n + 1) + INT_MAX) >> b ) + ((INT_MAX >> b) +1);
+    return (((n + 1) + INT_MAX) >> b ) + ((INT_MAX >> b) +1);
   else if (b == 31)
     return 1;
   else
@@ -2028,7 +2044,7 @@ int getSymbol() {
     println();
 
     exit(-1);
-  }
+  }  
   
   return symbol;
 }
@@ -2040,7 +2056,7 @@ int getSymbol() {
 void createSymbolTableEntry(int whichTable, int* string, int line, int class, int type, int value, int address, int size, int size2, int baseType) {
   int* newEntry;
 
-  newEntry = malloc(2 * SIZEOFINTSTAR + 10 * SIZEOFINT);
+  newEntry = malloc(2 * SIZEOFINTSTAR + 11 * SIZEOFINT);
 
   setString(newEntry, string);
   setLineNumber(newEntry, line);
@@ -2051,6 +2067,7 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
   setSize(newEntry, size);
   setSize2(newEntry, size2);
   setBaseType(newEntry, baseType);
+  
 
   // create entry at head of symbol table
   if (whichTable == GLOBAL_TABLE) {
@@ -2274,6 +2291,17 @@ int lookForType() {
     return 0;
   else
     return 1;
+}
+
+int lookForFields() {
+  if (symbol == SYM_INT)
+    return 1;
+  if (symbol == SYM_STRUCT)
+    return 1;
+  if (symbol == SYM_EOF)
+    return 0;
+  else
+    return 0;
 }
 
 void talloc() {
@@ -3796,10 +3824,110 @@ int gr_type() {
 
       getSymbol();
     }
+  } else if(symbol == SYM_STRUCT) {
+    type = STRUCT_T;
+    getSymbol();
   } else
     syntaxErrorSymbol(SYM_INT);
 
   return type;
+}
+
+int gr_struct(int table) {
+  int* structName;
+  int* variable;
+  int* newField;
+  int* entry;
+  int size;
+  int type;
+  int firstDimValue;
+  int rvalue;
+  int atype;
+  size = 0;
+  
+  structName = identifier;
+  createSymbolTableEntry(table,structName,lineNumber,VARIABLE,STRUCT_T,0,0,0,0,0);
+  entry = getVariable(structName);
+  getSymbol();
+  if(symbol == SYM_LBRACE){
+    while(lookForFields()) {
+      type = gr_type();
+      if(type == STRUCT_T){
+        if(symbol == SYM_IDENTIFIER){
+
+          
+        } else
+          syntaxErrorSymbol(symbol);
+      } else if(symbol == SYM_IDENTIFIER){
+        variable = identifier;
+        getSymbol();
+        //Optional [Constant]
+        if(symbol == SYM_LBRACKET) {
+          getSymbol();
+          atype = gr_shiftExpression(gr_attribute);
+          if(*(gr_attribute+1) == 0){
+            print((int*)"gr_avriable: constant expected in Array declaration");
+            println();
+            exit(-1);
+          }
+          firstDimValue = *gr_attribute;
+          rvalue = *gr_attribute;
+          *gr_attribute = 0;
+          //Array should always be an integer
+          if(atype != INT_T) {
+            typeWarning(INT_T, atype);
+          }
+          type = INTSTAR_T;
+          //getSymbol();
+          if(symbol != SYM_RBRACKET) {
+            syntaxErrorSymbol(SYM_RBRACKET);
+          }
+          getSymbol();
+
+          if(symbol == SYM_LBRACKET) {
+            getSymbol();
+            atype = gr_shiftExpression(gr_attribute);
+            if(*(gr_attribute+1) == 0){
+              print((int*)"gr_avriable: constant expected in Array declaration");
+              println();
+              exit(-1);
+            }
+            rvalue = rvalue * *gr_attribute;
+            //Array should always be an integer
+            if(atype != INT_T) {
+              typeWarning(INT_T, atype);
+            }
+
+
+            if(symbol != SYM_RBRACKET) {
+              syntaxErrorSymbol(SYM_RBRACKET);
+            }
+            getSymbol();
+          }
+
+          newField = malloc(5 * WORDSIZE);
+          setFieldName(newField,variable);
+          setFieldType(newField,INTSTAR_T);
+          setFieldSize(newField,firstDimValue);
+          setFieldSize2(newField,*gr_attribute);
+          
+        } else {
+          newField = malloc(5 * WORDSIZE);
+          setFieldName(newField,variable);
+          setFieldType(newField,type);
+          setFieldSize(newField,0);
+          setFieldSize2(newField,0);
+        }
+
+        setNextField(newField,getFields(entry));
+        setFields(entry,newField);
+      } else
+        syntaxErrorSymbol(symbol);
+    }
+  } else
+    syntaxErrorSymbol(symbol);
+
+  return size;
 }
 
 int gr_variable(int offset) {
@@ -3866,7 +3994,7 @@ int gr_variable(int offset) {
       } else {
         offset = offset - (firstDimValue * WORDSIZE);
       }
-
+      
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, INTSTAR_T, 0, offset, firstDimValue, *gr_attribute, type);
     } else {
       rvalue = 1;
@@ -4129,6 +4257,23 @@ void gr_cstar() {
         gr_procedure(variableOrProcedureName, type);
       } else
         syntaxErrorSymbol(SYM_IDENTIFIER);
+    } else if(symbol == SYM_STRUCT) {
+      type = INTSTAR_T;
+      getSymbol();
+      if(symbol == SYM_IDENTIFIER){
+        variableOrProcedureName = identifier;
+        getSymbol();
+        if(symbol == SYM_LBRACE){
+          gr_struct(GLOBAL_TABLE);
+        } else if(symbol == SYM_IDENTIFIER){
+
+
+
+          
+        } else
+          syntaxErrorSymbol(symbol);
+      } else
+        syntaxErrorSymbol(symbol);
     } else {
       type = gr_type();
 
