@@ -394,6 +394,20 @@ int reportUndefinedProcedures();
 // | 10 | basetype| type of elements stored in the array
 // +----+---------+
 
+struct sym_table_entry {
+ int* next;
+ int* string;
+ int line;
+ int class;
+ int type;
+ int value;
+ int address;
+ int scope;
+ int size;
+ int size2;
+ int basetype;
+};
+
 int* getNextEntry(int* entry)  { return (int*) *entry;       }
 int* getString(int* entry)     { return (int*) *(entry + 1); }
 int  getLineNumber(int* entry) { return        *(entry + 2); }
@@ -2061,7 +2075,7 @@ int getSymbol() {
 void createSymbolTableEntry(int whichTable, int* string, int line, int class, int type, int value, int address, int size, int size2, int baseType) {
   int* newEntry;
 
-  newEntry = malloc(2 * SIZEOFINTSTAR + 11 * SIZEOFINT);
+  newEntry = malloc(3 * SIZEOFINTSTAR + 10 * SIZEOFINT);
 
   setString(newEntry, string);
   setLineNumber(newEntry, line);
@@ -2072,7 +2086,7 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
   setSize(newEntry, size);
   setSize2(newEntry, size2);
   setBaseType(newEntry, baseType);
-  
+  setFields(newEntry,(int*)0);
 
   // create entry at head of symbol table
   if (whichTable == GLOBAL_TABLE) {
@@ -3871,7 +3885,7 @@ int gr_struct(int table) {
       type = gr_type();
       if(type == STRUCT_T){ //nested struct
         if(symbol == SYM_IDENTIFIER){
-
+          //TODO
           
         } else
           syntaxErrorSymbol(symbol);
@@ -3975,7 +3989,7 @@ int gr_variable(int offset) {
     gr_attribute = malloc(8);
 
   if(type == STRUCT_T) {
-    
+    //TODO
   }
   else if (symbol == SYM_IDENTIFIER) {
     getSymbol();
@@ -4862,22 +4876,24 @@ void emitGlobalsStrings() {
 
   // allocate space for global variables and copy strings
   while ((int) entry != 0) {
-    if (getClass(entry) == VARIABLE) {
-      storeBinary(binaryLength, getValue(entry));
-      if(getType(entry) == INTSTAR_T){
-        arraysize = getSize(entry);
-        arraysize2 = getSize2(entry);
-        if(arraysize > 0) {
-          if(arraysize2 > 0){
-            binaryLength = binaryLength + (arraysize * arraysize2 * WORDSIZE);
+    if(getType(entry) != STRUCT_T) {// FIXME is this always correct?
+      if (getClass(entry) == VARIABLE) {
+        storeBinary(binaryLength, getValue(entry));
+        if(getType(entry) == INTSTAR_T){
+          arraysize = getSize(entry);
+          arraysize2 = getSize2(entry);
+          if(arraysize > 0) {
+            if(arraysize2 > 0){
+              binaryLength = binaryLength + (arraysize * arraysize2 * WORDSIZE);
+            } else
+              binaryLength = binaryLength + (arraysize * WORDSIZE);
           } else
-            binaryLength = binaryLength + (arraysize * WORDSIZE);
+            binaryLength = binaryLength + WORDSIZE;
         } else
           binaryLength = binaryLength + WORDSIZE;
-      } else
-        binaryLength = binaryLength + WORDSIZE;
-    } else if (getClass(entry) == STRING)
-      binaryLength = copyStringToBinary(getString(entry), binaryLength);
+      } else if (getClass(entry) == STRING)
+        binaryLength = copyStringToBinary(getString(entry), binaryLength);
+    }
     entry = getNextEntry(entry);
   }
 
