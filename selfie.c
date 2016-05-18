@@ -1744,6 +1744,11 @@ int identifierOrKeyword() {
       return SYM_INT;
   }
 
+  if (identifierStringMatch(SYM_STRUCT)) {
+      SYMBOLS[SYM_STRUCT][1] = SYMBOLS[SYM_STRUCT][1] + 1;
+      return SYM_STRUCT;
+  }
+
   if (identifierStringMatch(SYM_ELSE)) {
       SYMBOLS[SYM_ELSE][1] = SYMBOLS[SYM_ELSE][1] + 1;
       return SYM_ELSE;
@@ -2218,6 +2223,15 @@ int isPlusOrMinus() {
     return 0;
 }
 
+int isIntOrStruct() {
+  if (symbol == SYM_INT)
+    return 1;
+  else if (symbol == SYM_STRUCT)
+    return 1;
+  else
+    return 0;
+}
+
 int isShift(){
     if (symbol == SYM_LSHIFT)
         return 1;
@@ -2284,6 +2298,8 @@ int lookForStatement() {
 
 int lookForType() {
   if (symbol == SYM_INT)
+    return 0;
+  else if (symbol == SYM_STRUCT)
     return 0;
   else if (symbol == SYM_VOID)
     return 0;
@@ -3848,11 +3864,12 @@ int gr_struct(int table) {
   structName = identifier;
   createSymbolTableEntry(table,structName,lineNumber,VARIABLE,STRUCT_T,0,0,0,0,0);
   entry = getVariable(structName);
-  getSymbol();
+  //  getSymbol();
   if(symbol == SYM_LBRACE){
+    getSymbol();
     while(lookForFields()) {
       type = gr_type();
-      if(type == STRUCT_T){
+      if(type == STRUCT_T){ //nested struct
         if(symbol == SYM_IDENTIFIER){
 
           
@@ -3912,18 +3929,32 @@ int gr_struct(int table) {
           setFieldSize2(newField,*gr_attribute);
           
         } else {
-          newField = malloc(5 * WORDSIZE);
-          setFieldName(newField,variable);
-          setFieldType(newField,type);
-          setFieldSize(newField,0);
-          setFieldSize2(newField,0);
+          //getSymbol();
+          if(symbol == SYM_SEMICOLON){
+            newField = malloc(5 * WORDSIZE);
+            setFieldName(newField,variable);
+            setFieldType(newField,type);
+            setFieldSize(newField,0);
+            setFieldSize2(newField,0);
+          } else
+            syntaxErrorSymbol(symbol);
         }
 
-        setNextField(newField,getFields(entry));
+        if(getFields(entry) != (int*) 0)
+          setNextField(newField,getFields(entry));
         setFields(entry,newField);
+        getSymbol();
       } else
         syntaxErrorSymbol(symbol);
     }
+    if(symbol == SYM_RBRACE){
+      getSymbol();
+      if(symbol == SYM_SEMICOLON){
+        getSymbol();
+      } else
+        syntaxErrorSymbol(symbol);
+    } else
+      syntaxErrorSymbol(symbol);
   } else
     syntaxErrorSymbol(symbol);
 
@@ -3943,7 +3974,10 @@ int gr_variable(int offset) {
   if(gr_attribute == (int*)0)//FIXME
     gr_attribute = malloc(8);
 
-  if (symbol == SYM_IDENTIFIER) {
+  if(type == STRUCT_T) {
+    
+  }
+  else if (symbol == SYM_IDENTIFIER) {
     getSymbol();
     //Optional [Constant]
     if(symbol == SYM_LBRACKET) {
@@ -4181,9 +4215,8 @@ void gr_procedure(int* procedure, int returnType) {
     // arrayOffset = 0;
     totalOffset = 0;
 
-    while (symbol == SYM_INT) {
-      //      varOffset = localVariables + 1;
-
+    while (isIntOrStruct()) {
+      
       varOffset = gr_variable(-totalOffset * WORDSIZE);
       totalOffset = totalOffset + varOffset;
 
@@ -4226,6 +4259,8 @@ void gr_procedure(int* procedure, int returnType) {
 void gr_cstar() {
   int type;
   int* variableOrProcedureName;
+  int* structName;
+  int* entry;
   int firstDimValue;
 
 
@@ -4261,15 +4296,25 @@ void gr_cstar() {
       type = INTSTAR_T;
       getSymbol();
       if(symbol == SYM_IDENTIFIER){
-        variableOrProcedureName = identifier;
+        structName = identifier;
         getSymbol();
         if(symbol == SYM_LBRACE){
           gr_struct(GLOBAL_TABLE);
-        } else if(symbol == SYM_IDENTIFIER){
-
-
-
-          
+        } else if(symbol == SYM_ASTERISK){
+          getSymbol();
+          if(symbol == SYM_IDENTIFIER){
+            variableOrProcedureName = identifier;
+            getSymbol();
+            if(symbol == SYM_SEMICOLON){
+              getSymbol();
+              allocatedMemory = allocatedMemory + WORDSIZE;
+              createSymbolTableEntry(GLOBAL_TABLE,variableOrProcedureName,lineNumber,VARIABLE,INTSTAR_T,0,-allocatedMemory,0,0,0);
+              entry = getVariable(variableOrProcedureName);
+              setFields(entry,getFields(getVariable(structName)));
+            } else
+              syntaxErrorSymbol(symbol); //FIXME initialization here
+          } else
+            syntaxErrorSymbol(symbol);          
         } else
           syntaxErrorSymbol(symbol);
       } else
@@ -7359,10 +7404,10 @@ int selfie(int argc, int* argv) {
 
         selfie_compile();
         i=0;
-        while(i < 32){
+        while(i < 34){
           print((int*) "symbol " );
           print(SYMBOLS[i][0]);
-          print((int*) " --> ");
+          print((int*) " : ");
           print(itoa(SYMBOLS[i][1],string_buffer,10,0,0));
           println();
           i = i + 1;
