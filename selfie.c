@@ -3980,7 +3980,8 @@ int gr_variable(int offset) {
   int atype;
   int rvalue;
   int firstDimValue;
-
+  int* entry;
+  int* fields;
 
   rvalue = 0;
   type = gr_type();
@@ -3989,7 +3990,24 @@ int gr_variable(int offset) {
     gr_attribute = malloc(8);
 
   if(type == STRUCT_T) {
-    //TODO
+    if(symbol == SYM_IDENTIFIER){
+      entry = getVariable(identifier);
+      getSymbol();
+      if(symbol == SYM_ASTERISK){
+        getSymbol();
+        if(symbol == SYM_IDENTIFIER){
+          rvalue = 1;
+          createSymbolTableEntry(LOCAL_TABLE,identifier,lineNumber,VARIABLE,INTSTAR_T,0,offset - WORDSIZE,0,0,0);
+          fields = getFields(entry);
+          entry = getVariable(identifier);
+          setFields(entry,fields);
+          getSymbol();
+        } else
+          syntaxErrorSymbol(symbol);
+      } else
+        syntaxErrorSymbol(symbol);
+    } else
+      syntaxErrorSymbol(symbol);
   }
   else if (symbol == SYM_IDENTIFIER) {
     getSymbol();
