@@ -3895,7 +3895,7 @@ void gr_statement() {
                    getSymbol();
 
                    //2 Dim Array
-                   if(symbol != SYM_LBRACKET) {
+                   if(symbol == SYM_LBRACKET) {
                        getSymbol();
                        load_integer(getSize2(field));
                        emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU); //Index = zeile * #spalten + spalte;
@@ -3912,6 +3912,7 @@ void gr_statement() {
                    if(symbol != SYM_RBRACKET) {
                      syntaxErrorSymbol(SYM_RBRACKET);
                    }
+                   getSymbol();
                }
 
                fieldOffset = getFieldOffset(field) * 4;
