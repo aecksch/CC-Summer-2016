@@ -2063,8 +2063,8 @@ int getSymbol() {
     println();
 
     exit(-1);
-  }  
-  
+  }
+
   return symbol;
 }
 
@@ -2823,12 +2823,12 @@ int gr_factor(int* gr_attribute) {
     } else if(symbol == SYM_LBRACKET){
       getSymbol();
       entry = getVariable(variableOrProcedureName);
-   
+
       if(getAddress(entry) > 0){ //if its a function parameter we have to load it because its an adress
         load_variable(variableOrProcedureName);
       } else if(getSize(entry) == 0) { //if we access an pointer like an array we have to load
         load_variable(variableOrProcedureName);
-      } else { 
+      } else {
         talloc();
         emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
       }
@@ -3874,7 +3874,7 @@ int gr_struct(int table) {
   int rvalue;
   int atype;
   size = 0;
-  
+
   structName = identifier;
   createSymbolTableEntry(table,structName,lineNumber,VARIABLE,STRUCT_T,0,0,0,0,0);
   entry = getVariable(structName);
@@ -3885,8 +3885,11 @@ int gr_struct(int table) {
       type = gr_type();
       if(type == STRUCT_T){ //nested struct
         if(symbol == SYM_IDENTIFIER){
-          //TODO
-          
+            newField = malloc(5 * WORDSIZE);
+            setFieldName(newField,variable);
+            setFieldType(newField,INTSTAR_T);
+            setFieldSize(newField,0);
+            setFieldSize2(newField,0);
         } else
           syntaxErrorSymbol(symbol);
       } else if(symbol == SYM_IDENTIFIER){
@@ -3941,7 +3944,7 @@ int gr_struct(int table) {
           setFieldType(newField,INTSTAR_T);
           setFieldSize(newField,firstDimValue);
           setFieldSize2(newField,*gr_attribute);
-          
+
         } else {
           //getSymbol();
           if(symbol == SYM_SEMICOLON){
@@ -3987,7 +3990,7 @@ int gr_variable(int offset) {
   rvalue = 0;
   firstDimValue = 0;
   atype = 0;
-  
+
   type = gr_type();
 
   if(gr_attribute == (int*)0)//FIXME
@@ -4075,7 +4078,7 @@ int gr_variable(int offset) {
       } else {
         offset = offset - (firstDimValue * WORDSIZE);
       }
-      
+
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, INTSTAR_T, 0, offset, firstDimValue, *gr_attribute, type);
 
       if(symbol == SYM_SEMICOLON) //FIXME this could be done better
@@ -4086,7 +4089,7 @@ int gr_variable(int offset) {
         return rvalue;
       else
         syntaxErrorSymbol(symbol);
-      
+
     } else {
       rvalue = 1;
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset - WORDSIZE, 0, 0, 0);
@@ -4106,7 +4109,7 @@ int gr_variable(int offset) {
 
     createSymbolTableEntry(LOCAL_TABLE, (int*) "missing variable name", lineNumber, VARIABLE, type, 0, offset, 0, 0, 0);
   }
-  
+
   return rvalue;
 }
 
@@ -4280,7 +4283,7 @@ void gr_procedure(int* procedure, int returnType) {
     totalOffset = 0;
 
     while (isIntOrStruct()) {
-      
+
       varOffset = gr_variable(-totalOffset * WORDSIZE);
       totalOffset = totalOffset + varOffset;
 
@@ -4378,7 +4381,7 @@ void gr_cstar() {
             } else
               syntaxErrorSymbol(symbol); //FIXME initialization here
           } else
-            syntaxErrorSymbol(symbol);          
+            syntaxErrorSymbol(symbol);
         } else
           syntaxErrorSymbol(symbol);
       } else
@@ -7478,7 +7481,7 @@ int selfie(int argc, int* argv) {
           println();
           i = i + 1;
         }
-        
+
       } else if (stringCompare((int*) *argv, (int*) "-o")) {
         binaryName = (int*) *(argv+1);
 
