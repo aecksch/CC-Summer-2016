@@ -3803,15 +3803,22 @@ void gr_statement() {
 
       ltype = getBaseType(getSymbolTableEntry(variableOrProcedureName,VARIABLE));
 
-  } else if (symbol == SYM_ARROW_OP) { //Struct access
+    } else if (symbol == SYM_ARROW_OP) { //Struct access
       getSymbol();
       if(symbol == SYM_IDENTIFIER) {
-          entry = load_variable(variableOrProcedureName);
+          entry = getVariable(variableOrProcedureName);
           load_variable(variableOrProcedureName);
           //TODO: find field and get offset, add it to address.
+          int* field;
+          field = searchFieldList(entry, identifier);
+          if(field == 0) {
+            print("Error: Field not found");
+          } else {
+             emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getFieldOffset(field) * 4);//FIXME is Immediate good here?
+          }
 
 
-          (symbol == SYM_ASSIGN) {
+         if (symbol == SYM_ASSIGN) {
            getSymbol();
 
            rtype = gr_expression();
