@@ -3828,7 +3828,7 @@ void gr_statement() {
            if(field == (int*) 0) {
                print("Error: Field not found");
            } else {
-               fieldOffset = getFieldOffset(field) * 4;
+               fieldOffset = getAddress(entry) + getFieldOffset(field) * 4;
                emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(), fieldOffset);//FIXME is Immediate good here?
            }
 
