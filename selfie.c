@@ -2737,6 +2737,7 @@ int gr_factor(int* gr_attribute) {
   int* variableOrProcedureName;
   int* field;
   int offset;
+  int firstDimValue;
 
   // assert: n = allocatedTemporaries
 
@@ -2892,17 +2893,68 @@ int gr_factor(int* gr_attribute) {
       entry = getVariable(variableOrProcedureName);
       getSymbol();
       if (symbol == SYM_IDENTIFIER){
-        field = searchFieldList(entry, identifier);
-        if (field == (int*) 0){
-          syntaxErrorMessage((int*) "Field not found!");
-        }
-        offset = getFieldOffset(field);
-        load_variable(variableOrProcedureName);
-        // load_integer(offset);
-        // emitLeftShiftBy(2);
-        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), (offset * WORDSIZE));
-        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
         getSymbol();
+        if (symbol == SYM_LBRACKET){
+          getSymbol();
+          type = gr_expression();
+
+          emitLeftShiftBy(2);
+
+          // firstDimValue = *gr_attribute;
+          if (symbol =! SYM_RBRACKET){
+            syntaxErrorSymbol(SYM_RBRACKET);
+          }
+          getSymbol();
+
+          if (symbol == SYM_LBRACKET){
+
+            load_integer(getFieldSize2(field));
+            emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
+            emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+            tfree(1);
+
+            getSymbol();
+
+
+            type = gr_expression();
+
+            emitLeftShiftBy(2);
+            emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+            tfree(1);
+
+
+            if (symbol =! SYM_RBRACKET){
+              syntaxErrorSymbol(SYM_RBRACKET);
+            }
+            getSymbol();
+          }
+
+          field = searchFieldList(entry, identifier);
+          if (field == (int*) 0){
+            syntaxErrorMessage((int*) "Field not found!");
+          }
+          offset = getFieldOffset(field);
+          load_integer(offset);
+
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+          tfree(1);
+
+          emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+          getSymbol();
+
+        } else {
+          field = searchFieldList(entry, identifier);
+          if (field == (int*) 0){
+            syntaxErrorMessage((int*) "Field not found!");
+          }
+          offset = getFieldOffset(field);
+          load_variable(variableOrProcedureName);
+          // load_integer(offset);
+          // emitLeftShiftBy(2);
+          emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), (offset * WORDSIZE));
+          emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
+          getSymbol();
+        }
       }
     }
     else {
@@ -3997,7 +4049,7 @@ int gr_struct(int table) {
           if(atype != INT_T) {
             typeWarning(INT_T, atype);
           }
-          type = INTSTAR_T;
+          // type = INTSTAR_T;
           //getSymbol();
           if(symbol != SYM_RBRACKET) {
             syntaxErrorSymbol(SYM_RBRACKET);
@@ -4026,7 +4078,11 @@ int gr_struct(int table) {
           }
 
           newField = malloc(6 * WORDSIZE);
-          address = address + 1;
+          if (*gr_attribute == 0){
+            address = address + firstDimValue;
+          } else {
+            address = address + (firstDimValue * *gr_attribute);
+          }
           setFieldName(newField,variable);
           setFieldType(newField,INTSTAR_T);
           setFieldSize(newField,firstDimValue);
