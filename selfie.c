@@ -3899,7 +3899,7 @@ void gr_statement() {
                    //2 Dim Array
                    if(symbol == SYM_LBRACKET) {
                        getSymbol();
-                       load_integer(getSize2(field));
+                       load_integer(getFieldSize2(field));
                        emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU); //Index = zeile * #spalten + spalte;
                        emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
                        tfree(1);
