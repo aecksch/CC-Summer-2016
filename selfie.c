@@ -3917,15 +3917,22 @@ void gr_statement() {
                        getSymbol();
                    }
 
-
+                   fieldOffset = getFieldOffset(field) * 4;
+                   load_integer(fieldOffset);
+                   emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+                   tfree(1);
                    //getSymbol();
+               } else {
+                   fieldOffset = getFieldOffset(field) * 4;
+                   load_integer(fieldOffset);
+                   emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
                }
 
-               fieldOffset = getFieldOffset(field) * 4;
-               load_integer(fieldOffset);
-               emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+
+
                tfree(1);
            }
+
 
 
           //getSymbol();
