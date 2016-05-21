@@ -2901,6 +2901,7 @@ int gr_factor(int* gr_attribute) {
         // load_integer(offset);
         // emitLeftShiftBy(2);
         emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), (offset * WORDSIZE));
+
         emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
         getSymbol();
@@ -3822,9 +3823,18 @@ void gr_statement() {
       if(symbol == SYM_IDENTIFIER) {
           entry = load_variable(variableOrProcedureName);
           load_variable(variableOrProcedureName);
-          //TODO: find field and get offset, add it to address.
+           //TODO: find field and get offset, add it to address.
+           int* field;
+           field = searchFieldList(entry, identifier);
+           if(field == 0) {
+               print("Error: Field not found");
+           } else {
+               emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getFieldOffset(field) * 4);//FIXME is Immediate good here?
+           }
+
 
           getSymbol();
+
           if (symbol == SYM_ASSIGN) {
            getSymbol();
 
