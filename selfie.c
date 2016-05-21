@@ -3821,7 +3821,7 @@ void gr_statement() {
           load_variable(variableOrProcedureName);
           //TODO: find field and get offset, add it to address.
 
-
+          getSymbol();
           if (symbol == SYM_ASSIGN) {
            getSymbol();
 
