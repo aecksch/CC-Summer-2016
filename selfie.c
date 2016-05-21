@@ -421,11 +421,12 @@ int  getSize2(int* entry)      { return        *(entry + 9); }
 int  getBaseType(int* entry)   { return        *(entry + 10);}
 int* getFields(int* entry)     { return (int*) *(entry + 11);}
 
-int* getNextField(int* field)  { return (int*) *field;       }
-int* getFieldName(int* field)  { return (int*) *(field + 1); }
-int  getFieldType(int* field)  { return        *(field + 2); }
-int  getFieldSize(int* field)  { return        *(field + 3); }
-int  getFieldSize2(int* field) { return        *(field + 4); }
+int* getNextField(int* field)   { return (int*) *field;       }
+int* getFieldName(int* field)   { return (int*) *(field + 1); }
+int  getFieldType(int* field)   { return        *(field + 2); }
+int  getFieldSize(int* field)   { return        *(field + 3); }
+int  getFieldSize2(int* field)  { return        *(field + 4); }
+int  getFieldOffset(int* field) { return        *(field + 5); }
 
 void setNextEntry(int* entry, int* next)    { *entry       = (int) next; }
 void setString(int* entry, int* identifier) { *(entry + 1) = (int) identifier; }
@@ -445,6 +446,7 @@ void setFieldName(int* field, int* identifier){ *(field + 1) = (int) identifier;
 void setFieldType(int* field, int type)       { *(field + 2) = type; }
 void setFieldSize(int* field, int size)       { *(field + 3) = size; }
 void setFieldSize2(int* field, int size2)     { *(field + 4) = size2; }
+void setFieldOffset(int* field, int offset)   { *(field + 5) = offset; }
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -3783,7 +3785,44 @@ void gr_statement() {
 
       ltype = getBaseType(getSymbolTableEntry(variableOrProcedureName,VARIABLE));
 
-    } else if (symbol == SYM_LPARENTHESIS) { //call
+  } else if (symbol == SYM_ARROW_OP) { //Struct access
+      getSymbol();
+      if(symbol == SYM_IDENTIFIER) {
+          entry = load_variable(variableOrProcedureName);
+          load_variable(variableOrProcedureName);
+          //TODO: find field and get offset, add it to address.
+
+
+          (symbol == SYM_ASSIGN) {
+           getSymbol();
+
+           rtype = gr_expression();
+
+           if (rtype != getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)))
+             typeWarning(getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)), rtype);
+
+           emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+
+           tfree(2);
+
+         } else
+           syntaxErrorSymbol(SYM_ASSIGN);
+
+         if (symbol == SYM_SEMICOLON)
+           getSymbol();
+         else
+           syntaxErrorSymbol(SYM_SEMICOLON);
+
+         ltype = getBaseType(getSymbolTableEntry(variableOrProcedureName,VARIABLE));
+
+      } else {
+          syntaxErrorSymbol(SYM_IDENTIFIER);
+      }
+
+
+
+
+  } else if (symbol == SYM_LPARENTHESIS) { //call
       getSymbol();
 
       gr_call(variableOrProcedureName);
@@ -3885,7 +3924,7 @@ int gr_struct(int table) {
       type = gr_type();
       if(type == STRUCT_T){ //nested struct
         if(symbol == SYM_IDENTIFIER){
-            newField = malloc(5 * WORDSIZE);
+            newField = malloc(6 * WORDSIZE);
             setFieldName(newField,variable);
             setFieldType(newField,INTSTAR_T);
             setFieldSize(newField,0);
@@ -3939,7 +3978,7 @@ int gr_struct(int table) {
             getSymbol();
           }
 
-          newField = malloc(5 * WORDSIZE);
+          newField = malloc(6 * WORDSIZE);
           setFieldName(newField,variable);
           setFieldType(newField,INTSTAR_T);
           setFieldSize(newField,firstDimValue);
@@ -3948,7 +3987,7 @@ int gr_struct(int table) {
         } else {
           //getSymbol();
           if(symbol == SYM_SEMICOLON){
-            newField = malloc(5 * WORDSIZE);
+            newField = malloc(6 * WORDSIZE);
             setFieldName(newField,variable);
             setFieldType(newField,type);
             setFieldSize(newField,0);
