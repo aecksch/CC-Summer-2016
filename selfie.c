@@ -2111,7 +2111,7 @@ int* searchFieldList(int* entry, int* string){
   int* fields;
   fields = *(entry + 11);
   while (fields != (int*) 0) {
-    if (stringCompare(string, getFieldName(fields)){
+    if (stringCompare(string, getFieldName(fields))){
       return fields;
     }
     fields = getNextField(fields);
@@ -2910,7 +2910,7 @@ int gr_factor(int* gr_attribute) {
           type = load_variable(variableOrProcedureName);
         } else {
           talloc();
-          emitIFormat(OP_ADDIU,getScope(entry),curregntTemporary(),getAddress(entry));
+          emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
           type = INTSTAR_T;
         }
       } else {
@@ -3814,22 +3814,15 @@ void gr_statement() {
 
       ltype = getBaseType(getSymbolTableEntry(variableOrProcedureName,VARIABLE));
 
-    } else if (symbol == SYM_ARROW_OP) { //Struct access
+  } else if (symbol == SYM_ARROW_OP) { //Struct access
       getSymbol();
       if(symbol == SYM_IDENTIFIER) {
-          entry = getVariable(variableOrProcedureName);
+          entry = load_variable(variableOrProcedureName);
           load_variable(variableOrProcedureName);
           //TODO: find field and get offset, add it to address.
-          int* field;
-          field = searchFieldList(entry, identifier);
-          if(field == 0) {
-            print("Error: Field not found");
-          } else {
-             emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getFieldOffset(field) * 4);//FIXME is Immediate good here?
-          }
 
 
-         if (symbol == SYM_ASSIGN) {
+          if (symbol == SYM_ASSIGN) {
            getSymbol();
 
            rtype = gr_expression();
@@ -3969,7 +3962,7 @@ int gr_struct(int table) {
           setFieldType(newField,INTSTAR_T);
           setFieldSize(newField,0);
           setFieldSize2(newField,0);
-          setFieldOffSet(newField, address);
+          setFieldOffset(newField, address);
         } else
           syntaxErrorSymbol(symbol);
       } else if(symbol == SYM_IDENTIFIER){
@@ -4025,7 +4018,7 @@ int gr_struct(int table) {
           setFieldType(newField,INTSTAR_T);
           setFieldSize(newField,firstDimValue);
           setFieldSize2(newField,*gr_attribute);
-          setFieldOffSet(newField, address);
+          setFieldOffset(newField, address);
 
         } else {
           //getSymbol();
@@ -4036,7 +4029,7 @@ int gr_struct(int table) {
             setFieldType(newField,type);
             setFieldSize(newField,0);
             setFieldSize2(newField,0);
-            setFieldOffSet(newField, address);
+            setFieldOffset(newField, address);
           } else
             syntaxErrorSymbol(symbol);
         }
