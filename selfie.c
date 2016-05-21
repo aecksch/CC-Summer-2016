@@ -2116,6 +2116,8 @@ int* searchFieldList(int* entry, int* string){
     }
     fields = getNextField(fields);
   }
+
+  return (int*) 0;
 }
 
 int* searchSymbolTable(int* entry, int* string, int class) {
@@ -2734,6 +2736,7 @@ int gr_factor(int* gr_attribute) {
   int* entry;
   int* variableOrProcedureName;
   int* field;
+  int offset;
 
   // assert: n = allocatedTemporaries
 
@@ -2890,6 +2893,14 @@ int gr_factor(int* gr_attribute) {
       getSymbol();
       if (symbol == SYM_IDENTIFIER){
         field = searchFieldList(entry, identifier);
+        if (field == (int*) 0){
+          syntaxErrorMessage((int*) "Field not found!");
+        }
+        offset = getFieldOffset(field);
+        load_variable(variableOrProcedureName);
+        // load_integer(offset);
+        // emitLeftShiftBy(2);
+        emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), (offset * WORDSIZE));
       }
     }
     else {
@@ -2899,7 +2910,7 @@ int gr_factor(int* gr_attribute) {
           type = load_variable(variableOrProcedureName);
         } else {
           talloc();
-          emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
+          emitIFormat(OP_ADDIU,getScope(entry),curregntTemporary(),getAddress(entry));
           type = INTSTAR_T;
         }
       } else {
@@ -3930,6 +3941,9 @@ int gr_struct(int table) {
   int firstDimValue;
   int rvalue;
   int atype;
+  int address;
+
+  address = -1;
   size = 0;
 
   structName = identifier;
@@ -3942,11 +3956,13 @@ int gr_struct(int table) {
       type = gr_type();
       if(type == STRUCT_T){ //nested struct
         if(symbol == SYM_IDENTIFIER){
-            newField = malloc(6 * WORDSIZE);
-            setFieldName(newField,variable);
-            setFieldType(newField,INTSTAR_T);
-            setFieldSize(newField,0);
-            setFieldSize2(newField,0);
+          address = address + 1;
+          newField = malloc(6 * WORDSIZE);
+          setFieldName(newField,variable);
+          setFieldType(newField,INTSTAR_T);
+          setFieldSize(newField,0);
+          setFieldSize2(newField,0);
+          setFieldOffSet(newField, address);
         } else
           syntaxErrorSymbol(symbol);
       } else if(symbol == SYM_IDENTIFIER){
@@ -3997,19 +4013,23 @@ int gr_struct(int table) {
           }
 
           newField = malloc(6 * WORDSIZE);
+          address = address + 1;
           setFieldName(newField,variable);
           setFieldType(newField,INTSTAR_T);
           setFieldSize(newField,firstDimValue);
           setFieldSize2(newField,*gr_attribute);
+          setFieldOffSet(newField, address);
 
         } else {
           //getSymbol();
           if(symbol == SYM_SEMICOLON){
             newField = malloc(6 * WORDSIZE);
+            address = address + 1;
             setFieldName(newField,variable);
             setFieldType(newField,type);
             setFieldSize(newField,0);
             setFieldSize2(newField,0);
+            setFieldOffSet(newField, address);
           } else
             syntaxErrorSymbol(symbol);
         }
