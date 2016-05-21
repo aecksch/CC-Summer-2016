@@ -2901,9 +2901,7 @@ int gr_factor(int* gr_attribute) {
         // load_integer(offset);
         // emitLeftShiftBy(2);
         emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), (offset * WORDSIZE));
-
         emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-
         getSymbol();
       }
     }
@@ -3650,6 +3648,8 @@ void gr_statement() {
   int* variableOrProcedureName;
   int* entry;
   int atype;
+  int* field;
+  int fieldOffset;
 
   // assert: allocatedTemporaries == 0;
 
@@ -3821,15 +3821,15 @@ void gr_statement() {
     } else if (symbol == SYM_ARROW_OP) { //Struct access
       getSymbol();
       if(symbol == SYM_IDENTIFIER) {
-          entry = load_variable(variableOrProcedureName);
+          entry = getVariable(variableOrProcedureName);
           load_variable(variableOrProcedureName);
            //TODO: find field and get offset, add it to address.
-           int* field;
            field = searchFieldList(entry, identifier);
-           if(field == 0) {
+           if(field == (int*) 0) {
                print("Error: Field not found");
            } else {
-               emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getFieldOffset(field) * 4);//FIXME is Immediate good here?
+               fieldOffset = getFieldOffset(field) * 4;
+               emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(), fieldOffset);//FIXME is Immediate good here?
            }
 
 
