@@ -3818,7 +3818,7 @@ void gr_statement() {
 
       ltype = getBaseType(getSymbolTableEntry(variableOrProcedureName,VARIABLE));
 
-  } else if (symbol == SYM_ARROW_OP) { //Struct access
+    } else if (symbol == SYM_ARROW_OP) { //Struct access
       getSymbol();
       if(symbol == SYM_IDENTIFIER) {
           entry = getVariable(variableOrProcedureName);
