@@ -3880,12 +3880,46 @@ void gr_statement() {
            if(field == (int*) 0) {
                print("Error: Field not found");
            } else {
+               getSymbol();
+               if(symbol == SYM_LBRACKET) {
+                   //Array
+                   atype = gr_expression();
+                   emitLeftShiftBy(2);
+                   //getSymbol();
+                   if(symbol != SYM_RBRACKET) {
+                     syntaxErrorSymbol(SYM_RBRACKET);
+                   }
+
+                   getSymbol();
+
+                   //2 Dim Array
+                   if(symbol != SYM_LBRACKET) {
+                       getSymbol();
+                       load_integer(getSize2(field));
+                       emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU); //Index = zeile * #spalten + spalte;
+                       emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+                       tfree(1);
+
+                       atype = gr_expression();
+
+                       emitLeftShiftBy(2);
+                       emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+                       tfree(1);
+                   }
+
+                   if(symbol != SYM_RBRACKET) {
+                     syntaxErrorSymbol(SYM_RBRACKET);
+                   }
+               }
+
                fieldOffset = getFieldOffset(field) * 4;
-               emitIFormat(OP_ADDIU, currentTemporary() ,currentTemporary(), fieldOffset);//FIXME is Immediate good here?
+               load_integer(fieldOffset);
+               emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+               tfree(1);
            }
 
 
-          getSymbol();
+          //getSymbol();
 
           if (symbol == SYM_ASSIGN) {
            getSymbol();
