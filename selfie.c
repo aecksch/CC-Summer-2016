@@ -3910,9 +3910,11 @@ void gr_statement() {
                        emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
                        tfree(1);
 
+                       
                        if(symbol != SYM_RBRACKET) {
                          syntaxErrorSymbol(SYM_RBRACKET);
                        }
+                       getSymbol();
                    }
 
 
