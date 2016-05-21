@@ -2908,7 +2908,7 @@ int gr_factor(int* gr_attribute) {
 
           if (symbol == SYM_LBRACKET){
 
-            load_integer(getFieldSize2(field));
+            load_integer(getFieldSize2(entry));
             emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
             emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
             tfree(1);
@@ -2942,7 +2942,7 @@ int gr_factor(int* gr_attribute) {
           tfree(1);
 
           emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-          getSymbol();
+          // getSymbol();
 
         } else {
           field = searchFieldList(entry, identifier);
