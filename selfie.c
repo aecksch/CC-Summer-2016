@@ -2901,7 +2901,7 @@ int gr_factor(int* gr_attribute) {
           emitLeftShiftBy(2);
 
           // firstDimValue = *gr_attribute;
-          if (symbol =! SYM_RBRACKET){
+          if (symbol != SYM_RBRACKET){
             syntaxErrorSymbol(SYM_RBRACKET);
           }
           getSymbol();
@@ -2923,7 +2923,7 @@ int gr_factor(int* gr_attribute) {
             tfree(1);
 
 
-            if (symbol =! SYM_RBRACKET){
+            if (symbol != SYM_RBRACKET){
               syntaxErrorSymbol(SYM_RBRACKET);
             }
             getSymbol();
@@ -3910,7 +3910,7 @@ void gr_statement() {
                        emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
                        tfree(1);
 
-                       
+
                        if(symbol != SYM_RBRACKET) {
                          syntaxErrorSymbol(SYM_RBRACKET);
                        }
