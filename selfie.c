@@ -2901,6 +2901,7 @@ int gr_factor(int* gr_attribute) {
         // load_integer(offset);
         // emitLeftShiftBy(2);
         emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), (offset * WORDSIZE));
+        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
         getSymbol();
       }
