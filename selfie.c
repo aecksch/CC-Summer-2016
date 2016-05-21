@@ -3874,6 +3874,7 @@ void gr_statement() {
 
     } else if (symbol == SYM_ARROW_OP) { //Struct access
       getSymbol();
+
       if(symbol == SYM_IDENTIFIER) {
           entry = getVariable(variableOrProcedureName);
           load_variable(variableOrProcedureName);
@@ -3885,6 +3886,7 @@ void gr_statement() {
                getSymbol();
                if(symbol == SYM_LBRACKET) {
                    //Array
+                   getSymbol();
                    atype = gr_expression();
                    emitLeftShiftBy(2);
                    //getSymbol();
@@ -3907,12 +3909,14 @@ void gr_statement() {
                        emitLeftShiftBy(2);
                        emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
                        tfree(1);
+
+                       if(symbol != SYM_RBRACKET) {
+                         syntaxErrorSymbol(SYM_RBRACKET);
+                       }
                    }
 
-                   if(symbol != SYM_RBRACKET) {
-                     syntaxErrorSymbol(SYM_RBRACKET);
-                   }
-                   getSymbol();
+
+                   //getSymbol();
                }
 
                fieldOffset = getFieldOffset(field) * 4;
