@@ -2107,6 +2107,17 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
   }
 }
 
+int* searchFieldList(int* entry, int* string){
+  int* fields;
+  fields = *(entry + 11);
+  while (fields != (int*) 0) {
+    if (stringCompare(string, getFieldName(fields)){
+      return fields;
+    }
+    fields = getNextField(fields);
+  }
+}
+
 int* searchSymbolTable(int* entry, int* string, int class) {
   while (entry != (int*) 0) {
     if (stringCompare(string, getString(entry)))
@@ -2722,6 +2733,7 @@ int gr_factor(int* gr_attribute) {
   int type;
   int* entry;
   int* variableOrProcedureName;
+  int* field;
 
   // assert: n = allocatedTemporaries
 
@@ -2873,6 +2885,12 @@ int gr_factor(int* gr_attribute) {
       // dereference
       emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
+    } else if (symbol == SYM_ARROW_OP){
+      entry = getVariable(variableOrProcedureName);
+      getSymbol();
+      if (symbol == SYM_IDENTIFIER){
+        field = searchFieldList(entry, identifier);
+      }
     }
     else {
       entry = getVariable(variableOrProcedureName);
