@@ -3982,8 +3982,12 @@ int gr_variable(int offset) {
   int firstDimValue;
   int* entry;
   int* fields;
+  int* structName;
 
   rvalue = 0;
+  firstDimValue = 0;
+  atype = 0;
+  
   type = gr_type();
 
   if(gr_attribute == (int*)0)//FIXME
@@ -3991,19 +3995,30 @@ int gr_variable(int offset) {
 
   if(type == STRUCT_T) {
     if(symbol == SYM_IDENTIFIER){
-      entry = getVariable(identifier);
+      structName = identifier;
       getSymbol();
       if(symbol == SYM_ASTERISK){
         getSymbol();
         if(symbol == SYM_IDENTIFIER){
           rvalue = 1;
+          entry = getVariable(structName);
           createSymbolTableEntry(LOCAL_TABLE,identifier,lineNumber,VARIABLE,INTSTAR_T,0,offset - WORDSIZE,0,0,0);
           fields = getFields(entry);
           entry = getVariable(identifier);
           setFields(entry,fields);
           getSymbol();
+          if(symbol == SYM_SEMICOLON) //FIXME this could be done better
+            getSymbol();
+          else if(symbol == SYM_COMMA)
+            return rvalue;
+          else if(symbol == SYM_RPARENTHESIS)
+            return rvalue;
+          else
+            syntaxErrorSymbol(symbol);
         } else
           syntaxErrorSymbol(symbol);
+      } else if(symbol == SYM_LBRACE) {
+        gr_struct(LOCAL_TABLE);
       } else
         syntaxErrorSymbol(symbol);
     } else
@@ -4062,18 +4077,36 @@ int gr_variable(int offset) {
       }
       
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, INTSTAR_T, 0, offset, firstDimValue, *gr_attribute, type);
+
+      if(symbol == SYM_SEMICOLON) //FIXME this could be done better
+        getSymbol();
+      else if(symbol == SYM_COMMA)
+        return rvalue;
+      else if(symbol == SYM_RPARENTHESIS)
+        return rvalue;
+      else
+        syntaxErrorSymbol(symbol);
+      
     } else {
       rvalue = 1;
       createSymbolTableEntry(LOCAL_TABLE, identifier, lineNumber, VARIABLE, type, 0, offset - WORDSIZE, 0, 0, 0);
+      //      getSymbol();
+      if(symbol == SYM_SEMICOLON) //FIXME this could be done better
+        getSymbol();
+      else if(symbol == SYM_COMMA)
+        return rvalue;
+      else if(symbol == SYM_RPARENTHESIS)
+        return rvalue;
+      else
+        syntaxErrorSymbol(symbol);
     }
 
-    //    getSymbol();
   } else {
     syntaxErrorSymbol(SYM_IDENTIFIER);
 
     createSymbolTableEntry(LOCAL_TABLE, (int*) "missing variable name", lineNumber, VARIABLE, type, 0, offset, 0, 0, 0);
   }
-
+  
   return rvalue;
 }
 
@@ -4244,7 +4277,6 @@ void gr_procedure(int* procedure, int returnType) {
 
     varOffset = 0;
 
-    // arrayOffset = 0;
     totalOffset = 0;
 
     while (isIntOrStruct()) {
@@ -4252,10 +4284,10 @@ void gr_procedure(int* procedure, int returnType) {
       varOffset = gr_variable(-totalOffset * WORDSIZE);
       totalOffset = totalOffset + varOffset;
 
-      if (symbol == SYM_SEMICOLON)
-        getSymbol();
-      else
-        syntaxErrorSymbol(SYM_SEMICOLON);
+      //if (symbol == SYM_SEMICOLON)
+      //  getSymbol();
+      //else
+      //  syntaxErrorSymbol(SYM_SEMICOLON);
     }
 
     help_procedure_prologue(totalOffset);
