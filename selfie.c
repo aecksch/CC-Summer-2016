@@ -2901,6 +2901,7 @@ int gr_factor(int* gr_attribute) {
         // load_integer(offset);
         // emitLeftShiftBy(2);
         emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), (offset * WORDSIZE));
+        emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
 
         getSymbol();
       }
@@ -3816,7 +3817,7 @@ void gr_statement() {
 
       ltype = getBaseType(getSymbolTableEntry(variableOrProcedureName,VARIABLE));
 
-  } else if (symbol == SYM_ARROW_OP) { //Struct access
+    } else if (symbol == SYM_ARROW_OP) { //Struct access
       getSymbol();
       if(symbol == SYM_IDENTIFIER) {
           entry = load_variable(variableOrProcedureName);
