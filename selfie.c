@@ -4042,7 +4042,7 @@ int gr_variable(int offset) {
       if(atype != INT_T) {
         typeWarning(INT_T, atype);
       }
-      type = INTSTAR_T;
+      type = INTSTAR_T; //FIXME 
       //getSymbol();
       if(symbol != SYM_RBRACKET) {
         syntaxErrorSymbol(SYM_RBRACKET);
@@ -4062,7 +4062,6 @@ int gr_variable(int offset) {
         if(atype != INT_T) {
           typeWarning(INT_T, atype);
         }
-
 
         if(symbol != SYM_RBRACKET) {
           syntaxErrorSymbol(SYM_RBRACKET);
