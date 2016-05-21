@@ -2936,6 +2936,8 @@ int gr_factor(int* gr_attribute) {
           offset = getFieldOffset(field);
           load_integer(offset);
 
+          emitLeftShiftBy(2);
+
           emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
           tfree(1);
 
