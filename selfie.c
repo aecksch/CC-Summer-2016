@@ -2908,7 +2908,12 @@ int gr_factor(int* gr_attribute) {
 
           if (symbol == SYM_LBRACKET){
 
-            load_integer(getFieldSize2(entry));
+            field = searchFieldList(entry, identifier);
+            if (field == (int*) 0){
+              syntaxErrorMessage((int*) "Field not found!");
+            }
+
+            load_integer(getFieldSize2(field));
             emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
             emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
             tfree(1);
@@ -2929,10 +2934,10 @@ int gr_factor(int* gr_attribute) {
             getSymbol();
           }
 
-          field = searchFieldList(entry, identifier);
-          if (field == (int*) 0){
-            syntaxErrorMessage((int*) "Field not found!");
-          }
+          // field = searchFieldList(entry, identifier);
+          // if (field == (int*) 0){
+          //   syntaxErrorMessage((int*) "Field not found!");
+          // }
           offset = getFieldOffset(field);
           load_integer(offset);
 
@@ -3917,22 +3922,15 @@ void gr_statement() {
                        getSymbol();
                    }
 
-                   fieldOffset = getFieldOffset(field) * 4;
-                   load_integer(fieldOffset);
-                   emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
-                   tfree(1);
+
                    //getSymbol();
-               } else {
-                   fieldOffset = getFieldOffset(field) * 4;
-                   load_integer(fieldOffset);
-                   emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
                }
 
-
-
+               fieldOffset = getFieldOffset(field) * 4;
+               load_integer(fieldOffset);
+               emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
                tfree(1);
            }
-
 
 
           //getSymbol();
