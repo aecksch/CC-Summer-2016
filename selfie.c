@@ -2934,10 +2934,10 @@ int gr_factor(int* gr_attribute) {
             getSymbol();
           }
 
-          // field = searchFieldList(entry, identifier);
-          // if (field == (int*) 0){
-          //   syntaxErrorMessage((int*) "Field not found!");
-          // }
+          field = searchFieldList(entry, identifier);
+          if (field == (int*) 0){
+            syntaxErrorMessage((int*) "Field not found!");
+          }
           offset = getFieldOffset(field);
           load_integer(offset);
 
