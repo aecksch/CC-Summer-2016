@@ -427,10 +427,10 @@ int  getFieldType(int* field)   { return        *(field + 2); }
 int  getFieldSize(int* field)   { return        *(field + 3); }
 int  getFieldSize2(int* field)  { return        *(field + 4); }
 int  getFieldOffset(int* field) { return        *(field + 5); }
-int* getFieldFields(int* field) { return        *(field + 6); }
+int* getFieldFields(int* field) { return (int*) *(field + 6); }
 
 void setNextEntry(struct sym_table_entry *entry, struct sym_table_entry *next)    { entry->next      = next; }
-void setString(struct sym_table_entry *entry, int* identifier) { entry->string = (int) identifier; }
+void setString(struct sym_table_entry *entry, int* identifier) { entry->string = (int*) identifier; }
 void setLineNumber(struct sym_table_entry *entry, int line)      { entry->line  = line; }
 void setClass(struct sym_table_entry *entry, int class)          { entry->class  = class; }
 void setType(struct sym_table_entry *entry, int type)            { entry->type  = type; }
@@ -440,7 +440,7 @@ void setScope(struct sym_table_entry *entry, int scope)          { entry->scope 
 void setSize(struct sym_table_entry *entry, int size)            { entry->size  = size; }
 void setSize2(struct sym_table_entry *entry, int size)           { entry->size2  = size; }
 void setBaseType(struct sym_table_entry *entry, int baseType)    { entry->basetype = baseType; }
-void setFields(struct sym_table_entry *entry, int* field)        { entry->fields = (int) field; }
+void setFields(struct sym_table_entry *entry, int* field)        { entry->fields = field; }
 
 void setNextField(int* field, int* next)      { *field = (int) next; }
 void setFieldName(int* field, int* identifier){ *(field + 1) = (int) identifier; }
@@ -448,7 +448,7 @@ void setFieldType(int* field, int type)       { *(field + 2) = type; }
 void setFieldSize(int* field, int size)       { *(field + 3) = size; }
 void setFieldSize2(int* field, int size2)     { *(field + 4) = size2; }
 void setFieldOffset(int* field, int offset)   { *(field + 5) = offset; }
-void setFieldFields(int* field, int* fieldFields) { *(field+6) = fieldFields; }
+void setFieldFields(int* field, int* fieldFields) { *(field+6) = (int) fieldFields; }
 
 void resetSymbolTables();
 
@@ -2113,7 +2113,7 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
 
 int* searchFieldList(struct sym_table_entry *entry, int* string){
   int* fields;
-  fields = entry->fields;
+  fields = (int*) entry->fields;
   while (fields != (int*) 0) {
     if (stringCompare(string, getFieldName(fields))){
       return fields;
@@ -2453,6 +2453,8 @@ int* putType(int type) {
     return (int*) "int*";
   else if (type == VOID_T)
     return (int*) "void";
+  else if (type == STRUCT_T)
+    return (int*) "struct";
   else
     return (int*) "unknown";
 }
@@ -3943,8 +3945,10 @@ void gr_statement() {
 
           rtype = gr_expression();
 
-          if (rtype != getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)))
-            typeWarning(getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)), rtype);
+
+
+          if (rtype != getFieldType(field))
+            typeWarning(getFieldType(field), rtype);
 
           emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
 
