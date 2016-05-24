@@ -427,6 +427,7 @@ int  getFieldType(int* field)   { return        *(field + 2); }
 int  getFieldSize(int* field)   { return        *(field + 3); }
 int  getFieldSize2(int* field)  { return        *(field + 4); }
 int  getFieldOffset(int* field) { return        *(field + 5); }
+int* getFieldFields(int* field) { return        *(field + 6); }
 
 void setNextEntry(int* entry, int* next)    { *entry       = (int) next; }
 void setString(int* entry, int* identifier) { *(entry + 1) = (int) identifier; }
@@ -447,6 +448,7 @@ void setFieldType(int* field, int type)       { *(field + 2) = type; }
 void setFieldSize(int* field, int size)       { *(field + 3) = size; }
 void setFieldSize2(int* field, int size2)     { *(field + 4) = size2; }
 void setFieldOffset(int* field, int offset)   { *(field + 5) = offset; }
+void setFieldFields(int* field, int* fieldFields) { *(field+6) = fieldFields; }
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -4050,6 +4052,7 @@ int gr_struct(int table) {
   int rvalue;
   int atype;
   int address;
+  int* structType;
 
   address = -1;
   size = 0;
@@ -4063,16 +4066,29 @@ int gr_struct(int table) {
     while(lookForFields()) {
       type = gr_type();
       if(type == STRUCT_T){ //nested struct
-        if(symbol == SYM_IDENTIFIER){
-          address = address + 1;
-          newField = malloc(6 * WORDSIZE);
-          setFieldName(newField,variable);
-          setFieldType(newField,INTSTAR_T);
-          setFieldSize(newField,0);
-          setFieldSize2(newField,0);
-          setFieldOffset(newField, address);
+          //getSymbol();
+        if(symbol == SYM_IDENTIFIER) {
+            structType = identifier;
+            getSymbol();
+            if(symbol == SYM_ASTERISK) {
+                getSymbol();
+                if(symbol == SYM_IDENTIFIER) {
+                    address = address + 1;
+                    newField = malloc(6 * WORDSIZE);
+                    setFieldName(newField,identifier);
+                    setFieldType(newField,INTSTAR_T);
+                    setFieldSize(newField,0);
+                    setFieldSize2(newField,0);
+                    setFieldOffset(newField, address);
+                    setFieldFields(newField, getFields(getVariable(structType)));
+                } else
+                    syntaxErrorSymbol(SYM_IDENTIFIER);
+            } else
+                syntaxErrorSymbol(SYM_ASTERISK);
         } else
           syntaxErrorSymbol(SYM_IDENTIFIER);
+
+         getSymbol();
       } else if(symbol == SYM_IDENTIFIER){
         variable = identifier;
         getSymbol();
