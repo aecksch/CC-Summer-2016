@@ -4074,13 +4074,17 @@ int gr_struct(int table) {
                 getSymbol();
                 if(symbol == SYM_IDENTIFIER) {
                     address = address + 1;
-                    newField = malloc(6 * WORDSIZE);
-                    setFieldName(newField,identifier);
-                    setFieldType(newField,INTSTAR_T);
-                    setFieldSize(newField,0);
-                    setFieldSize2(newField,0);
-                    setFieldOffset(newField, address);
-                    setFieldFields(newField, getFields(getVariable(structType)));
+                    getSymbol();
+                    if (symbol == SYM_SEMICOLON){
+                      newField = malloc(6 * WORDSIZE);
+                      setFieldName(newField,identifier);
+                      setFieldType(newField,INTSTAR_T);
+                      setFieldSize(newField,0);
+                      setFieldSize2(newField,0);
+                      setFieldOffset(newField, address);
+                      setFieldFields(newField, getFields(getVariable(structType)));
+                    } else
+                      syntaxErrorSymbol(SYM_SEMICOLON);
                 } else
                     syntaxErrorSymbol(SYM_IDENTIFIER);
             } else
