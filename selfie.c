@@ -2737,7 +2737,7 @@ int gr_factor(int* gr_attribute) {
   int* variableOrProcedureName;
   int* field;
   int offset;
-  int firstDimValue;
+  //  int firstDimValue;
 
   // assert: n = allocatedTemporaries
 
@@ -2891,6 +2891,7 @@ int gr_factor(int* gr_attribute) {
 
     } else if (symbol == SYM_ARROW_OP){
       entry = getVariable(variableOrProcedureName);
+      load_variable(variableOrProcedureName);
       getSymbol();
       if (symbol == SYM_IDENTIFIER){
         getSymbol();
@@ -2915,13 +2916,11 @@ int gr_factor(int* gr_attribute) {
 
             getSymbol();
 
-
             type = gr_expression();
 
             emitLeftShiftBy(2);
             emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
             tfree(1);
-
 
             if (symbol != SYM_RBRACKET){
               syntaxErrorSymbol(SYM_RBRACKET);
@@ -2933,13 +2932,12 @@ int gr_factor(int* gr_attribute) {
           if (field == (int*) 0){
             syntaxErrorMessage((int*) "Field not found!");
           }
-          offset = getFieldOffset(field);
+          offset = getFieldOffset(field) * WORDSIZE;
           load_integer(offset);
-
-          emitLeftShiftBy(2);
-
           emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
-          tfree(1);
+          tfree(1); // t1 = t1(arrayoffset) + t2(fieldoffset)
+          emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+          tfree(1); // t0 = t0 + t1
 
           emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
           // getSymbol();
@@ -2950,12 +2948,12 @@ int gr_factor(int* gr_attribute) {
             syntaxErrorMessage((int*) "Field not found!");
           }
           offset = getFieldOffset(field);
-          load_variable(variableOrProcedureName);
+          //load_variable(variableOrProcedureName);
           // load_integer(offset);
           // emitLeftShiftBy(2);
           emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), (offset * WORDSIZE));
           emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-          getSymbol();
+          //  getSymbol();
         }
       }
     }
@@ -3876,96 +3874,87 @@ void gr_statement() {
       getSymbol();
 
       if(symbol == SYM_IDENTIFIER) {
-          entry = getVariable(variableOrProcedureName);
-          load_variable(variableOrProcedureName);
-           //TODO: find field and get offset, add it to address.
-           field = searchFieldList(entry, identifier);
-           if(field == (int*) 0) {
-               print("Error: Field not found");
-           } else {
-               getSymbol();
-               if(symbol == SYM_LBRACKET) {
-                   //Array
-                   getSymbol();
-                   atype = gr_expression();
-                   emitLeftShiftBy(2);
-                   //getSymbol();
-                   if(symbol != SYM_RBRACKET) {
-                     syntaxErrorSymbol(SYM_RBRACKET);
-                   }
+        entry = getVariable(variableOrProcedureName);
+        load_variable(variableOrProcedureName);
+        //TODO: find field and get offset, add it to address.
+        field = searchFieldList(entry, identifier);
+        if(field == (int*) 0) {
+          print("Error: Field not found");
+        } else {
+          getSymbol();
+          if(symbol == SYM_LBRACKET) {
+            //Array
+            getSymbol();
+            atype = gr_expression();
+            emitLeftShiftBy(2);
+            if(symbol != SYM_RBRACKET) {
+              syntaxErrorSymbol(SYM_RBRACKET);
+            }
 
-                   getSymbol();
+            getSymbol();
 
-                   //2 Dim Array
-                   if(symbol == SYM_LBRACKET) {
-                       getSymbol();
-                       load_integer(getFieldSize2(field));
-                       emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU); //Index = zeile * #spalten + spalte;
-                       emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
-                       tfree(1);
+            //2 Dim Array
+            if(symbol == SYM_LBRACKET) {
+              getSymbol();
+              load_integer(getFieldSize2(field));
+              emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU); //Index = zeile * #spalten + spalte;
+              emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
+              tfree(1);
 
-                       atype = gr_expression();
+              atype = gr_expression();
 
-                       emitLeftShiftBy(2);
-                       emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
-                       tfree(1);
-
-
-                       if(symbol != SYM_RBRACKET) {
-                         syntaxErrorSymbol(SYM_RBRACKET);
-                       }
-                       getSymbol();
-                   }
-
-                   fieldOffset = getFieldOffset(field) * 4;
-                   load_integer(fieldOffset);
-                   emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
-                   tfree(1);
-                   //getSymbol();
-               } else {
-                   fieldOffset = getFieldOffset(field) * 4;
-                   load_integer(fieldOffset);
-                   emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
-               }
+              emitLeftShiftBy(2);
+              emitRFormat(OP_SPECIAL,previousTemporary(),currentTemporary(),previousTemporary(),FCT_ADDU);
+              tfree(1);
 
 
+              if(symbol != SYM_RBRACKET) {
+                syntaxErrorSymbol(SYM_RBRACKET);
+              }
+              getSymbol();
+            }
 
-               tfree(1);
-           }
+            fieldOffset = getFieldOffset(field) * 4;
+            load_integer(fieldOffset);
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+            tfree(1); // t1 = t1(arrayoffset) + t2(fieldoffset)
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+          } else {
+            fieldOffset = getFieldOffset(field) * 4;
+            load_integer(fieldOffset);
+            emitRFormat(OP_SPECIAL, previousTemporary(), currentTemporary(), previousTemporary(), FCT_ADDU);
+          }
 
 
 
-          //getSymbol();
+          tfree(1);
+        }
 
-          if (symbol == SYM_ASSIGN) {
-           getSymbol();
+        if (symbol == SYM_ASSIGN) {
+          getSymbol();
 
-           rtype = gr_expression();
+          rtype = gr_expression();
 
-           if (rtype != getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)))
-             typeWarning(getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)), rtype);
+          if (rtype != getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)))
+            typeWarning(getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)), rtype);
 
-           emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
+          emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
 
-           tfree(2);
+          tfree(2);
 
-         } else
-           syntaxErrorSymbol(SYM_ASSIGN);
+        } else
+          syntaxErrorSymbol(SYM_ASSIGN);
 
-         if (symbol == SYM_SEMICOLON)
-           getSymbol();
-         else
-           syntaxErrorSymbol(SYM_SEMICOLON);
+        if (symbol == SYM_SEMICOLON)
+          getSymbol();
+        else
+          syntaxErrorSymbol(SYM_SEMICOLON);
 
-         ltype = getBaseType(getSymbolTableEntry(variableOrProcedureName,VARIABLE));
+        ltype = getBaseType(getSymbolTableEntry(variableOrProcedureName,VARIABLE));
 
       } else {
-          syntaxErrorSymbol(SYM_IDENTIFIER);
+        syntaxErrorSymbol(SYM_IDENTIFIER);
       }
-
-
-
-
   } else if (symbol == SYM_LPARENTHESIS) { //call
       getSymbol();
 
@@ -4079,7 +4068,7 @@ int gr_struct(int table) {
           setFieldSize2(newField,0);
           setFieldOffset(newField, address);
         } else
-          syntaxErrorSymbol(symbol);
+          syntaxErrorSymbol(SYM_IDENTIFIER);
       } else if(symbol == SYM_IDENTIFIER){
         variable = identifier;
         getSymbol();
@@ -4128,16 +4117,17 @@ int gr_struct(int table) {
           }
 
           newField = malloc(6 * WORDSIZE);
-          if (*gr_attribute == 0){
-            address = address + firstDimValue;
-          } else {
-            address = address + (firstDimValue * *gr_attribute);
-          }
+          address = address + 1;
           setFieldName(newField,variable);
           setFieldType(newField,INTSTAR_T);
           setFieldSize(newField,firstDimValue);
           setFieldSize2(newField,*gr_attribute);
           setFieldOffset(newField, address);
+          if (*gr_attribute == 0){
+            address = address + firstDimValue - 1;
+          } else {
+            address = address + (firstDimValue * *gr_attribute) - 1;
+          }
 
         } else {
           //getSymbol();
@@ -4150,7 +4140,7 @@ int gr_struct(int table) {
             setFieldSize2(newField,0);
             setFieldOffset(newField, address);
           } else
-            syntaxErrorSymbol(symbol);
+            syntaxErrorSymbol(SYM_SEMICOLON);
         }
 
         if(getFields(entry) != (int*) 0)
@@ -4158,18 +4148,18 @@ int gr_struct(int table) {
         setFields(entry,newField);
         getSymbol();
       } else
-        syntaxErrorSymbol(symbol);
+        syntaxErrorSymbol(SYM_IDENTIFIER);
     }
     if(symbol == SYM_RBRACE){
       getSymbol();
       if(symbol == SYM_SEMICOLON){
         getSymbol();
       } else
-        syntaxErrorSymbol(symbol);
+        syntaxErrorSymbol(SYM_SEMICOLON);
     } else
-      syntaxErrorSymbol(symbol);
+      syntaxErrorSymbol(SYM_RBRACE);
   } else
-    syntaxErrorSymbol(symbol);
+    syntaxErrorSymbol(SYM_LBRACE);
 
   return size;
 }
@@ -4186,6 +4176,7 @@ int gr_variable(int offset) {
   rvalue = 0;
   firstDimValue = 0;
   atype = 0;
+  entry = (int*) 0;
 
   type = gr_type();
 
@@ -4213,15 +4204,15 @@ int gr_variable(int offset) {
           else if(symbol == SYM_RPARENTHESIS)
             return rvalue;
           else
-            syntaxErrorSymbol(symbol);
+            syntaxErrorUnexpected(symbol);
         } else
-          syntaxErrorSymbol(symbol);
+          syntaxErrorSymbol(SYM_IDENTIFIER);
       } else if(symbol == SYM_LBRACE) {
         gr_struct(LOCAL_TABLE);
       } else
-        syntaxErrorSymbol(symbol);
+        syntaxErrorUnexpected(symbol);
     } else
-      syntaxErrorSymbol(symbol);
+      syntaxErrorSymbol(SYM_IDENTIFIER);
   }
   else if (symbol == SYM_IDENTIFIER) {
     getSymbol();
@@ -4284,7 +4275,7 @@ int gr_variable(int offset) {
       else if(symbol == SYM_RPARENTHESIS)
         return rvalue;
       else
-        syntaxErrorSymbol(symbol);
+        syntaxErrorUnexpected(symbol);
 
     } else {
       rvalue = 1;
@@ -4297,7 +4288,7 @@ int gr_variable(int offset) {
       else if(symbol == SYM_RPARENTHESIS)
         return rvalue;
       else
-        syntaxErrorSymbol(symbol);
+        syntaxErrorUnexpected(symbol);
     }
 
   } else {
@@ -4575,14 +4566,15 @@ void gr_cstar() {
               entry = getVariable(variableOrProcedureName);
               setFields(entry,getFields(getVariable(structName)));
             } else
-              syntaxErrorSymbol(symbol); //FIXME initialization here
+              syntaxErrorSymbol(SYM_SEMICOLON); //FIXME initialization here
           } else
-            syntaxErrorSymbol(symbol);
+            syntaxErrorSymbol(SYM_IDENTIFIER);
         } else
-          syntaxErrorSymbol(symbol);
+          syntaxErrorSymbol(SYM_ASTERISK);
       } else
-        syntaxErrorSymbol(symbol);
+        syntaxErrorSymbol(SYM_IDENTIFIER);
     } else {
+      
       type = gr_type();
 
       if (symbol == SYM_IDENTIFIER) {
