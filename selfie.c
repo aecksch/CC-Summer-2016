@@ -4167,12 +4167,13 @@ int gr_struct(int table) {
             syntaxErrorSymbol(SYM_SEMICOLON);
         }
 
-        if(getFields(entry) != (int*) 0)
-          setNextField(newField,getFields(entry));
-        setFields(entry,newField);
         getSymbol();
       } else
         syntaxErrorSymbol(SYM_IDENTIFIER);
+      
+      if(getFields(entry) != (int*) 0)
+        setNextField(newField,getFields(entry));
+      setFields(entry,newField);
     }
     if(symbol == SYM_RBRACE){
       getSymbol();
