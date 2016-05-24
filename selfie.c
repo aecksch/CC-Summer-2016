@@ -386,7 +386,7 @@ void resetScanner() {
 // +----+---------+
 
 struct sym_table_entry {
- int* next;
+ struct sym_table_entry *next;
  int* string;
  int line;
  int class;
