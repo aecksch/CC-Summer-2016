@@ -389,16 +389,16 @@ struct sym_table_entry {
 // table pointers
 struct sym_table_entry *global_symbol_table  = (int*) 0;
 struct sym_table_entry *local_symbol_table   = (int*) 0;
-int* library_symbol_table = (int*) 0;
+struct sym_table_entry *library_symbol_table = (int*) 0;
 int* gr_attribute = (int*) 0; //FIXME
 
 void resetSymbolTables();
 
 void createSymbolTableEntry(int which, int* string, int line, int class, int type, int value, int address, int size, int size2, int baseType);
-int* searchSymbolTable(int* entry, int* string, int class);
+int* searchSymbolTable(struct sym_table_entry *entry, int* string, int class);
 int* getSymbolTableEntry(int* string, int class);
 
-int isUndefinedProcedure(int* entry);
+int isUndefinedProcedure(struct sym_table_entry *entry);
 int reportUndefinedProcedures();
 
 // symbol table entry:
@@ -416,7 +416,7 @@ int reportUndefinedProcedures();
 // | 10 | basetype| type of elements stored in the array
 // +----+---------+
 
-int* getNextEntry(struct sym_table_entry *entry)  { return (int*) entry->next;       }
+struct sym_table_entry* getNextEntry(struct sym_table_entry *entry)  { return entry->next;       }
 int* getString(struct sym_table_entry *entry)     { return (int*) entry->string; }
 int  getLineNumber(struct sym_table_entry *entry) { return        entry->line; }
 int  getClass(struct sym_table_entry *entry)      { return        entry->class; }
@@ -514,7 +514,7 @@ int  load_variable(int* variable);
 void load_integer(int value);
 void load_string(int* string);
 
-int  help_call_codegen(int* entry, int* procedure);
+int  help_call_codegen(struct sym_table_entry *entry, int* procedure);
 void help_procedure_prologue(int localVariables);
 void help_procedure_epilogue(int parameters);
 
@@ -2111,9 +2111,9 @@ void createSymbolTableEntry(int whichTable, int* string, int line, int class, in
   }
 }
 
-int* searchFieldList(int* entry, int* string){
+int* searchFieldList(struct sym_table_entry *entry, int* string){
   int* fields;
-  fields = *(entry + 11);
+  fields = entry->fields;
   while (fields != (int*) 0) {
     if (stringCompare(string, getFieldName(fields))){
       return fields;
@@ -2124,7 +2124,7 @@ int* searchFieldList(int* entry, int* string){
   return (int*) 0;
 }
 
-int* searchSymbolTable(int* entry, int* string, int class) {
+int* searchSymbolTable(struct sym_table_entry *entry, int* string, int class) {
   while (entry != (int*) 0) {
     if (stringCompare(string, getString(entry)))
       if (class == getClass(entry))
@@ -2138,7 +2138,7 @@ int* searchSymbolTable(int* entry, int* string, int class) {
 }
 
 int* getSymbolTableEntry(int* string, int class) {
-  int* entry;
+  struct sym_table_entry *entry;
 
   if (class == VARIABLE) {
     // local variables override global variables
@@ -2151,7 +2151,7 @@ int* getSymbolTableEntry(int* string, int class) {
   return searchSymbolTable(global_symbol_table, string, class);
 }
 
-int isUndefinedProcedure(int* entry) {
+int isUndefinedProcedure(struct sym_table_entry *entry) {
   int* libraryEntry;
 
   if (getClass(entry) == PROCEDURE) {
@@ -2172,7 +2172,7 @@ int isUndefinedProcedure(int* entry) {
 
 int reportUndefinedProcedures() {
   int undefined;
-  int* entry;
+  struct sym_table_entry *entry;
 
   undefined = 0;
 
@@ -2474,7 +2474,7 @@ void typeWarning(int expected, int found) {
 }
 
 int* getVariable(int* variable) {
-  int* entry;
+  struct sym_table_entry *entry;
 
   entry = getSymbolTableEntry(variable, VARIABLE);
 
@@ -2491,7 +2491,7 @@ int* getVariable(int* variable) {
 }
 
 int load_variable(int* variable) {
-  int* entry;
+  struct sym_table_entry *entry;
 
   entry = getVariable(variable);
 
@@ -2591,7 +2591,7 @@ void load_string(int* string) {
   emitIFormat(OP_ADDIU, REG_GP, currentTemporary(), -allocatedMemory);
 }
 
-int help_call_codegen(int* entry, int* procedure) {
+int help_call_codegen(struct sym_table_entry *entry, int* procedure) {
   int type;
 
   if (entry == (int*) 0) {
@@ -2665,7 +2665,7 @@ void help_procedure_epilogue(int parameters) {
 }
 
 int gr_call(int* procedure) {
-  int* entry;
+  struct sym_table_entry *entry;
   int numberOfTemporaries;
   int type;
 
@@ -2737,7 +2737,7 @@ int gr_factor(int* gr_attribute) {
   int hasCast;
   int cast;
   int type;
-  int* entry;
+  struct sym_table_entry *entry;
   int* variableOrProcedureName;
   int* field;
   int offset;
@@ -3706,7 +3706,7 @@ void gr_statement() {
   int ltype;
   int rtype;
   int* variableOrProcedureName;
-  int* entry;
+  struct sym_table_entry *entry;
   int atype;
   int* field;
   int fieldOffset;
@@ -4047,7 +4047,7 @@ int gr_struct(int table) {
   int* structName;
   int* variable;
   int* newField;
-  int* entry;
+  struct sym_table_entry *entry;
   int size;
   int type;
   int firstDimValue;
@@ -4197,7 +4197,7 @@ int gr_variable(int offset) {
   int atype;
   int rvalue;
   int firstDimValue;
-  int* entry;
+  struct sym_table_entry *entry;
   int* fields;
   int* structName;
 
@@ -4409,7 +4409,7 @@ void gr_procedure(int* procedure, int returnType) {
   int parameters;
   int varOffset;
   int functionStart;
-  int* entry;
+  struct sym_table_entry *entry;
   int totalOffset;
 
   currentProcedureName = procedure;
@@ -4542,7 +4542,7 @@ void gr_cstar() {
   int type;
   int* variableOrProcedureName;
   int* structName;
-  int* entry;
+  struct sym_table_entry *entry;
   int firstDimValue;
 
 
@@ -5135,7 +5135,7 @@ int copyStringToBinary(int* s, int baddr) {
 }
 
 void emitGlobalsStrings() {
-  int* entry;
+  struct sym_table_entry *entry;
   int arraysize;
   int arraysize2;
 
