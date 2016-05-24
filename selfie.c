@@ -387,9 +387,12 @@ struct sym_table_entry {
 };
 
 // table pointers
-struct sym_table_entry *global_symbol_table  = (int*) 0;
-struct sym_table_entry *local_symbol_table   = (int*) 0;
-struct sym_table_entry *library_symbol_table = (int*) 0;
+struct sym_table_entry *global_symbol_table;
+//global_symbol_table  = (int*) 0;
+struct sym_table_entry *local_symbol_table;
+//local_symbol_table   = (int*) 0;
+struct sym_table_entry *library_symbol_table;
+//library_symbol_table = (int*) 0;
 int* gr_attribute = (int*) 0; //FIXME
 
 void resetSymbolTables();
@@ -416,7 +419,7 @@ int reportUndefinedProcedures();
 // | 10 | basetype| type of elements stored in the array
 // +----+---------+
 
-struct sym_table_entry* getNextEntry(struct sym_table_entry *entry)  { return entry->next;       }
+int* getNextEntry(struct sym_table_entry *entry)  { return (int*) entry->next;}
 int* getString(struct sym_table_entry *entry)     { return (int*) entry->string; }
 int  getLineNumber(struct sym_table_entry *entry) { return        entry->line; }
 int  getClass(struct sym_table_entry *entry)      { return        entry->class; }
@@ -437,7 +440,7 @@ int  getFieldSize2(int* field)  { return        *(field + 4); }
 int  getFieldOffset(int* field) { return        *(field + 5); }
 int* getFieldFields(int* field) { return        *(field + 6); }
 
-void setNextEntry(struct sym_table_entry *entry, struct sym_table_entry *next)    { entry->next       = (int) next; }
+void setNextEntry(struct sym_table_entry *entry, struct sym_table_entry *next)    { entry->next       = next; }
 void setString(struct sym_table_entry *entry, int* identifier) { entry->string = (int) identifier; }
 void setLineNumber(struct sym_table_entry *entry, int line)      { entry->line  = line; }
 void setClass(struct sym_table_entry *entry, int class)          { entry->class  = class; }
@@ -480,8 +483,8 @@ int LIBRARY_TABLE = 3;
 // ------------------------- INITIALIZATION ------------------------
 
 void resetSymbolTables() {
-  global_symbol_table  = malloc(12 * 4);
-  local_symbol_table   = malloc(12 * 4);
+  global_symbol_table  = (int*) 0;
+  local_symbol_table   = (int*) 0;
   library_symbol_table = (int*) 0;
 }
 
