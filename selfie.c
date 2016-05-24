@@ -408,7 +408,7 @@ struct sym_table_entry* local_symbol_table; //   = (int*) 0;
 struct sym_table_entry* library_symbol_table; // = (int*) 0;
 int* gr_attribute = (int*) 0; //FIXME
 
-int* getNextEntry(struct sym_table_entry *entry)  { return (int*) entry->next;       }
+// int* getNextEntry(struct sym_table_entry *entry)  { return (int*) entry->next;       }
 int* getString(struct sym_table_entry *entry)     { return (int*) entry->string; }
 int  getLineNumber(struct sym_table_entry *entry) { return        entry->line; }
 int  getClass(struct sym_table_entry *entry)      { return        entry->class; }
@@ -2131,7 +2131,7 @@ int* searchSymbolTable(struct sym_table_entry *entry, int* string, int class) {
         return (int*) entry;
 
     // keep looking
-    entry = getNextEntry(entry);
+    entry = entry -> next;
   }
 
   return (int*) 0;
@@ -2189,7 +2189,7 @@ int reportUndefinedProcedures() {
     }
 
     // keep looking
-    entry = getNextEntry(entry);
+    entry = entry -> next;
   }
 
   return undefined;
@@ -4232,7 +4232,7 @@ int gr_variable(int offset) {
         if(symbol == SYM_IDENTIFIER){
           rvalue = 1;
           entry = getVariable(structName);
-          createSymbolTableEntry(LOCAL_TABLE,identifier,lineNumber,VARIABLE,INTSTAR_T,0,offset - WORDSIZE,0,0,0);
+          createSymbolTableEntry(LOCAL_TABLE,identifier,lineNumber,VARIABLE,INTSTAR_T,0,offset - WORDSIZE,0,0,INTSTAR_T);
           fields = getFields(entry);
           entry = getVariable(identifier);
           setFields(entry,fields);
@@ -4454,7 +4454,7 @@ void gr_procedure(int* procedure, int returnType) {
         setAddress(entry, parameters * WORDSIZE + 2 * WORDSIZE);
 
         parameters = parameters + 1;
-        entry    = getNextEntry(entry);
+        entry    = entry -> next;
       }
 
       if (symbol == SYM_RPARENTHESIS)
@@ -5175,7 +5175,7 @@ void emitGlobalsStrings() {
       } else if (getClass(entry) == STRING)
         binaryLength = copyStringToBinary(getString(entry), binaryLength);
     }
-    entry = getNextEntry(entry);
+    entry = entry -> next;
   }
 
   // assert: binaryLength == n + allocatedMemory
