@@ -2909,7 +2909,11 @@ int gr_factor(int* gr_attribute) {
 
           if (symbol == SYM_LBRACKET){
 
-            load_integer(getFieldSize2(entry));
+            field = searchFieldList(entry, identifier);
+            if (field == (int*) 0){
+              syntaxErrorMessage((int*) "Field not found!");
+            }
+            load_integer(getFieldSize2(field));
             emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
             emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
             tfree(1);
