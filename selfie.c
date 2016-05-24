@@ -370,6 +370,28 @@ void resetScanner() {
 // ------------------------- SYMBOL TABLE --------------------------
 // -----------------------------------------------------------------
 
+// ------------------------ GLOBAL VARIABLES -----------------------
+struct sym_table_entry {
+ struct sym_table_entry *next;
+ int* string;
+ int line;
+ int class;
+ int type;
+ int value;
+ int address;
+ int scope;
+ int size;
+ int size2;
+ int basetype;
+ int* fields;
+};
+
+// table pointers
+struct sym_table_entry *global_symbol_table  = (int*) 0;
+struct sym_table_entry *local_symbol_table   = (int*) 0;
+int* library_symbol_table = (int*) 0;
+int* gr_attribute = (int*) 0; //FIXME
+
 void resetSymbolTables();
 
 void createSymbolTableEntry(int which, int* string, int line, int class, int type, int value, int address, int size, int size2, int baseType);
@@ -394,32 +416,18 @@ int reportUndefinedProcedures();
 // | 10 | basetype| type of elements stored in the array
 // +----+---------+
 
-struct sym_table_entry {
- int* next;
- int* string;
- int line;
- int class;
- int type;
- int value;
- int address;
- int scope;
- int size;
- int size2;
- int basetype;
-};
-
-int* getNextEntry(int* entry)  { return (int*) *entry;       }
-int* getString(int* entry)     { return (int*) *(entry + 1); }
-int  getLineNumber(int* entry) { return        *(entry + 2); }
-int  getClass(int* entry)      { return        *(entry + 3); }
-int  getType(int* entry)       { return        *(entry + 4); }
-int  getValue(int* entry)      { return        *(entry + 5); }
-int  getAddress(int* entry)    { return        *(entry + 6); }
-int  getScope(int* entry)      { return        *(entry + 7); }
-int  getSize(int* entry)       { return        *(entry + 8); }
-int  getSize2(int* entry)      { return        *(entry + 9); }
-int  getBaseType(int* entry)   { return        *(entry + 10);}
-int* getFields(int* entry)     { return (int*) *(entry + 11);}
+int* getNextEntry(struct sym_table_entry *entry)  { return (int*) entry->next;       }
+int* getString(struct sym_table_entry *entry)     { return (int*) entry->string; }
+int  getLineNumber(struct sym_table_entry *entry) { return        entry->line; }
+int  getClass(struct sym_table_entry *entry)      { return        entry->class; }
+int  getType(struct sym_table_entry *entry)       { return        entry->type; }
+int  getValue(struct sym_table_entry *entry)      { return        entry->value; }
+int  getAddress(struct sym_table_entry *entry)    { return        entry->address; }
+int  getScope(struct sym_table_entry *entry)      { return        entry->scope; }
+int  getSize(struct sym_table_entry *entry)       { return        entry->size; }
+int  getSize2(struct sym_table_entry *entry)      { return        entry->size2; }
+int  getBaseType(struct sym_table_entry *entry)   { return        entry->basetype;}
+int* getFields(struct sym_table_entry *entry)     { return (int*) entry->fields;}
 
 int* getNextField(int* field)   { return (int*) *field;       }
 int* getFieldName(int* field)   { return (int*) *(field + 1); }
@@ -429,18 +437,18 @@ int  getFieldSize2(int* field)  { return        *(field + 4); }
 int  getFieldOffset(int* field) { return        *(field + 5); }
 int* getFieldFields(int* field) { return        *(field + 6); }
 
-void setNextEntry(int* entry, int* next)    { *entry       = (int) next; }
-void setString(int* entry, int* identifier) { *(entry + 1) = (int) identifier; }
-void setLineNumber(int* entry, int line)      { *(entry + 2)  = line; }
-void setClass(int* entry, int class)          { *(entry + 3)  = class; }
-void setType(int* entry, int type)            { *(entry + 4)  = type; }
-void setValue(int* entry, int value)          { *(entry + 5)  = value; }
-void setAddress(int* entry, int address)      { *(entry + 6)  = address; }
-void setScope(int* entry, int scope)          { *(entry + 7)  = scope; }
-void setSize(int* entry, int size)            { *(entry + 8)  = size; }
-void setSize2(int* entry, int size)           { *(entry + 9)  = size; }
-void setBaseType(int* entry, int baseType)    { *(entry + 10) = baseType; }
-void setFields(int* entry, int* field)        { *(entry + 11) = (int) field; }
+void setNextEntry(struct sym_table_entry *entry, struct sym_table_entry *next)    { entry->next       = (int) next; }
+void setString(struct sym_table_entry *entry, int* identifier) { entry->string = (int) identifier; }
+void setLineNumber(struct sym_table_entry *entry, int line)      { entry->line  = line; }
+void setClass(struct sym_table_entry *entry, int class)          { entry->class  = class; }
+void setType(struct sym_table_entry *entry, int type)            { entry->type = type; }
+void setValue(struct sym_table_entry *entry, int value)          { entry->value  = value; }
+void setAddress(struct sym_table_entry *entry, int address)      { entry->address  = address; }
+void setScope(struct sym_table_entry *entry, int scope)          { entry->scope  = scope; }
+void setSize(struct sym_table_entry *entry, int size)            { entry->size  = size; }
+void setSize2(struct sym_table_entry *entry, int size)           { entry->size2  = size; }
+void setBaseType(struct sym_table_entry *entry, int baseType)    { entry->basetype = baseType; }
+void setFields(struct sym_table_entry *entry, int* field)        { entry->fields = (int) field; }
 
 void setNextField(int* field, int* next)      { *field = (int) next; }
 void setFieldName(int* field, int* identifier){ *(field + 1) = (int) identifier; }
@@ -468,18 +476,12 @@ int GLOBAL_TABLE  = 1;
 int LOCAL_TABLE   = 2;
 int LIBRARY_TABLE = 3;
 
-// ------------------------ GLOBAL VARIABLES -----------------------
 
-// table pointers
-int* global_symbol_table  = (int*) 0;
-int* local_symbol_table   = (int*) 0;
-int* library_symbol_table = (int*) 0;
-int* gr_attribute = (int*) 0; //FIXME
 // ------------------------- INITIALIZATION ------------------------
 
 void resetSymbolTables() {
-  global_symbol_table  = (int*) 0;
-  local_symbol_table   = (int*) 0;
+  global_symbol_table  = malloc(12 * 4);
+  local_symbol_table   = malloc(12 * 4);
   library_symbol_table = (int*) 0;
 }
 
@@ -2077,9 +2079,9 @@ int getSymbol() {
 // -----------------------------------------------------------------
 
 void createSymbolTableEntry(int whichTable, int* string, int line, int class, int type, int value, int address, int size, int size2, int baseType) {
-  int* newEntry;
+  struct sym_table_entry *newEntry;
 
-  newEntry = malloc(3 * SIZEOFINTSTAR + 10 * SIZEOFINT);
+  newEntry = malloc(12 * WORDSIZE);
 
   setString(newEntry, string);
   setLineNumber(newEntry, line);
@@ -4073,18 +4075,19 @@ int gr_struct(int table) {
             if(symbol == SYM_ASTERISK) {
                 getSymbol();
                 if(symbol == SYM_IDENTIFIER) {
-                    address = address + 1;
                     getSymbol();
-                    if (symbol == SYM_SEMICOLON){
-                      newField = malloc(6 * WORDSIZE);
-                      setFieldName(newField,identifier);
-                      setFieldType(newField,INTSTAR_T);
-                      setFieldSize(newField,0);
-                      setFieldSize2(newField,0);
-                      setFieldOffset(newField, address);
-                      setFieldFields(newField, getFields(getVariable(structType)));
+                    if(symbol == SYM_SEMICOLON) {
+                        address = address + 1;
+                        newField = malloc(6 * WORDSIZE);
+                        setFieldName(newField,identifier);
+                        setFieldType(newField,INTSTAR_T);
+                        setFieldSize(newField,0);
+                        setFieldSize2(newField,0);
+                        setFieldOffset(newField, address);
+                        setFieldFields(newField, getFields(getVariable(structType)));
                     } else
-                      syntaxErrorSymbol(SYM_SEMICOLON);
+                        syntaxErrorSymbol(SYM_SEMICOLON);
+
                 } else
                     syntaxErrorSymbol(SYM_IDENTIFIER);
             } else
@@ -4093,7 +4096,7 @@ int gr_struct(int table) {
           syntaxErrorSymbol(SYM_IDENTIFIER);
 
          getSymbol();
-      } else if(symbol == SYM_IDENTIFIER){
+      } else if(symbol == SYM_IDENTIFIER) {
         variable = identifier;
         getSymbol();
         //Optional [Constant]
@@ -4167,14 +4170,14 @@ int gr_struct(int table) {
             syntaxErrorSymbol(SYM_SEMICOLON);
         }
 
+        if(getFields(entry) != (int*) 0)
+          setNextField(newField,getFields(entry));
+        setFields(entry,newField);
         getSymbol();
       } else
         syntaxErrorSymbol(SYM_IDENTIFIER);
-      
-      if(getFields(entry) != (int*) 0)
-        setNextField(newField,getFields(entry));
-      setFields(entry,newField);
     }
+
     if(symbol == SYM_RBRACE){
       getSymbol();
       if(symbol == SYM_SEMICOLON){
