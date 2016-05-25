@@ -408,18 +408,18 @@ struct sym_table_entry* local_symbol_table; //   = (int*) 0;
 struct sym_table_entry* library_symbol_table; // = (int*) 0;
 int* gr_attribute = (int*) 0; //FIXME
 
-// int* getNextEntry(struct sym_table_entry *entry)  { return (int*) entry->next;       }
-int* getString(struct sym_table_entry *entry)     { return (int*) entry->string; }
-int  getLineNumber(struct sym_table_entry *entry) { return        entry->line; }
-int  getClass(struct sym_table_entry *entry)      { return        entry->class; }
-int  getType(struct sym_table_entry *entry)       { return        entry->type; }
-int  getValue(struct sym_table_entry *entry)      { return        entry->value; }
-int  getAddress(struct sym_table_entry *entry)    { return        entry->address; }
-int  getScope(struct sym_table_entry *entry)      { return        entry->scope; }
-int  getSize(struct sym_table_entry *entry)       { return        entry->size; }
-int  getSize2(struct sym_table_entry *entry)      { return        entry->size2; }
-int  getBaseType(struct sym_table_entry *entry)   { return        entry->basetype;}
-int* getFields(struct sym_table_entry *entry)     { return (int*) entry->fields;}
+// int* getNextEntry(struct sym_table_entry *entry)  { return (int*) entry -> next;       }
+// int* getString(struct sym_table_entry *entry)     { return (int*) entry -> string; }
+// int  getLineNumber(struct sym_table_entry *entry) { return        entry -> line; }
+// int  getClass(struct sym_table_entry *entry)      { return        entry -> class; }
+// int  getType(struct sym_table_entry *entry)       { return        entry -> type; }
+// int  getValue(struct sym_table_entry *entry)      { return        entry -> value; }
+// int  getAddress(struct sym_table_entry *entry)    { return        entry -> address; }
+// int  getScope(struct sym_table_entry *entry)      { return        entry -> scope; }
+// int  getSize(struct sym_table_entry *entry)       { return        entry -> size; }
+// int  getSize2(struct sym_table_entry *entry)      { return        entry -> size2; }
+// int  getBaseType(struct sym_table_entry *entry)   { return        entry -> basetype;}
+// int* getFields(struct sym_table_entry *entry)     { return (int*) entry -> fields;}
 
 int* getNextField(int* field)   { return (int*) *field;       }
 int* getFieldName(int* field)   { return (int*) *(field + 1); }
@@ -429,18 +429,18 @@ int  getFieldSize2(int* field)  { return        *(field + 4); }
 int  getFieldOffset(int* field) { return        *(field + 5); }
 int* getFieldFields(int* field) { return (int*) *(field + 6); }
 
-void setNextEntry(struct sym_table_entry *entry, struct sym_table_entry *next)    { entry->next      = next; }
-void setString(struct sym_table_entry *entry, int* identifier) { entry->string = (int*) identifier; }
-void setLineNumber(struct sym_table_entry *entry, int line)      { entry->line  = line; }
-void setClass(struct sym_table_entry *entry, int class)          { entry->class  = class; }
-void setType(struct sym_table_entry *entry, int type)            { entry->type  = type; }
-void setValue(struct sym_table_entry *entry, int value)          { entry->value  = value; }
-void setAddress(struct sym_table_entry *entry, int address)      { entry->address  = address; }
-void setScope(struct sym_table_entry *entry, int scope)          { entry->scope  = scope; }
-void setSize(struct sym_table_entry *entry, int size)            { entry->size  = size; }
-void setSize2(struct sym_table_entry *entry, int size)           { entry->size2  = size; }
-void setBaseType(struct sym_table_entry *entry, int baseType)    { entry->basetype = baseType; }
-void setFields(struct sym_table_entry *entry, int* field)        { entry->fields = field; }
+void setNextEntry(struct sym_table_entry *entry, struct sym_table_entry *next)    { entry -> next = next; }
+void setString(struct sym_table_entry *entry, int* identifier)   { entry -> string = (int*) identifier; }
+void setLineNumber(struct sym_table_entry *entry, int line)      { entry -> line  = line; }
+void setClass(struct sym_table_entry *entry, int class)          { entry -> class  = class; }
+void setType(struct sym_table_entry *entry, int type)            { entry -> type  = type; }
+void setValue(struct sym_table_entry *entry, int value)          { entry -> value  = value; }
+void setAddress(struct sym_table_entry *entry, int address)      { entry -> address  = address; }
+void setScope(struct sym_table_entry *entry, int scope)          { entry -> scope  = scope; }
+void setSize(struct sym_table_entry *entry, int size)            { entry -> size  = size; }
+void setSize2(struct sym_table_entry *entry, int size)           { entry -> size2  = size; }
+void setBaseType(struct sym_table_entry *entry, int baseType)    { entry -> basetype = baseType; }
+void setFields(struct sym_table_entry *entry, int* field)        { entry -> fields = field; }
 
 void setNextField(int* field, int* next)      { *field = (int) next; }
 void setFieldName(int* field, int* identifier){ *(field + 1) = (int) identifier; }
@@ -2126,8 +2126,8 @@ int* searchFieldList(struct sym_table_entry *entry, int* string){
 
 int* searchSymbolTable(struct sym_table_entry *entry, int* string, int class) {
   while (entry != (int*) 0) {
-    if (stringCompare(string, getString(entry)))
-      if (class == getClass(entry))
+    if (stringCompare(string, entry -> string))
+      if (class == entry -> class)
         return (int*) entry;
 
     // keep looking
@@ -2154,16 +2154,16 @@ int* getSymbolTableEntry(int* string, int class) {
 int isUndefinedProcedure(struct sym_table_entry *entry) {
   int* libraryEntry;
 
-  if (getClass(entry) == PROCEDURE) {
+  if (entry -> class == PROCEDURE) {
     // library procedures override regular procedures for bootstrapping
-    libraryEntry = searchSymbolTable(library_symbol_table, getString(entry), PROCEDURE);
+    libraryEntry = searchSymbolTable(library_symbol_table, entry -> string, PROCEDURE);
 
     if (libraryEntry != (int*) 0)
       entry = libraryEntry;
 
-    if (getAddress(entry) == 0)
+    if (entry -> address == 0)
       return 1;
-    else if (getOpcode(loadBinary(getAddress(entry))) == OP_JAL)
+    else if (getOpcode(loadBinary(entry -> address)) == OP_JAL)
       return 1;
   }
 
@@ -2182,8 +2182,8 @@ int reportUndefinedProcedures() {
     if (isUndefinedProcedure(entry)) {
       undefined = 1;
 
-      printLineNumber((int*) "error", getLineNumber(entry));
-      print(getString(entry));
+      printLineNumber((int*) "error", entry -> line);
+      print(entry -> string);
       print((int*) " undefined");
       println();
     }
@@ -2499,9 +2499,9 @@ int load_variable(int* variable) {
 
   talloc();
 
-  emitIFormat(OP_LW, getScope(entry), currentTemporary(), getAddress(entry));
+  emitIFormat(OP_LW, entry -> scope, currentTemporary(), entry -> address);
 
-  return getType(entry);
+  return entry -> type;
 }
 
 void load_integer(int value) {
@@ -2605,21 +2605,21 @@ int help_call_codegen(struct sym_table_entry *entry, int* procedure) {
     type = INT_T; //assume default return type 'int'
 
   } else {
-    type = getType(entry);
+    type = entry -> type;
 
-    if (getAddress(entry) == 0) {
+    if (entry -> address == 0) {
       // CASE 2: function call, no definition, but declared.
       setAddress(entry, binaryLength);
 
       emitJFormat(OP_JAL, 0);
-    } else if (getOpcode(loadBinary(getAddress(entry))) == OP_JAL) {
+    } else if (getOpcode(loadBinary(entry -> address)) == OP_JAL) {
       // CASE 3: function call, no declaration
-      emitJFormat(OP_JAL, getAddress(entry) / WORDSIZE);
+      emitJFormat(OP_JAL, entry -> address / WORDSIZE);
 
       setAddress(entry, binaryLength - 2 * WORDSIZE);
     } else
       // CASE 4: function defined, use the address
-      emitJFormat(OP_JAL, getAddress(entry) / WORDSIZE);
+      emitJFormat(OP_JAL, entry -> address / WORDSIZE);
   }
 
   return type;
@@ -2848,13 +2848,13 @@ int gr_factor(int* gr_attribute) {
       getSymbol();
       entry = getVariable(variableOrProcedureName);
 
-      if(getAddress(entry) > 0){ //if its a function parameter we have to load it because its an adress
+      if(entry -> address > 0){ //if its a function parameter we have to load it because its an adress
         load_variable(variableOrProcedureName);
-      } else if(getSize(entry) == 0) { //if we access an pointer like an array we have to load
+      } else if(entry -> size == 0) { //if we access an pointer like an array we have to load
         load_variable(variableOrProcedureName);
       } else {
         talloc();
-        emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
+        emitIFormat(OP_ADDIU,entry -> scope,currentTemporary(),entry -> address);
       }
       type = gr_expression();
 
@@ -2870,7 +2870,7 @@ int gr_factor(int* gr_attribute) {
         syntaxErrorSymbol(SYM_RBRACKET);
 
       if(symbol == SYM_LBRACKET){
-        load_integer(getSize2(entry));
+        load_integer(entry -> size2);
         emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
         emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
         tfree(1);
@@ -2969,12 +2969,12 @@ int gr_factor(int* gr_attribute) {
     }
     else {
       entry = getVariable(variableOrProcedureName);
-      if(getSize(entry) > 0){
-        if(getAddress(entry) > 0){
+      if(entry -> size > 0){
+        if(entry -> address > 0){
           type = load_variable(variableOrProcedureName);
         } else {
           talloc();
-          emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));
+          emitIFormat(OP_ADDIU, entry -> scope, currentTemporary(), entry -> address);
           type = INTSTAR_T;
         }
       } else {
@@ -3808,13 +3808,13 @@ void gr_statement() {
     //   print("Address of Array: ");
     //   print(itoa(getAddress(entry), string_buffer, 10, 0, 0));
     //   println();
-      if(getAddress(entry) > 0){
+      if(entry -> address > 0){
         load_variable(variableOrProcedureName);
-      } else if(getSize(entry) == 0) { //if we access an pointer like an array we have to load
+      } else if(entry -> size == 0) { //if we access an pointer like an array we have to load
         load_variable(variableOrProcedureName);
       } else {
         talloc();
-        emitIFormat(OP_ADDIU,getScope(entry),currentTemporary(),getAddress(entry));//FIXME is Immediate good here?
+        emitIFormat(OP_ADDIU, entry -> scope, currentTemporary(), entry -> address);//FIXME is Immediate good here?
       }
       atype = gr_expression();
 
@@ -3833,7 +3833,7 @@ void gr_statement() {
 
       if (symbol == SYM_LBRACKET) {
         getSymbol();
-        load_integer(getSize2(entry));
+        load_integer(entry -> size2);
         emitRFormat(OP_SPECIAL, currentTemporary(), previousTemporary(), 0, FCT_MULTU);
         emitRFormat(OP_SPECIAL, 0, 0, previousTemporary(), FCT_MFLO);
         tfree(1);
@@ -3863,8 +3863,8 @@ void gr_statement() {
 
         rtype = gr_expression();
 
-        if (rtype != getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)))
-          typeWarning(getBaseType(getSymbolTableEntry(variableOrProcedureName, VARIABLE)), rtype);
+        if (rtype != entry -> basetype)
+          typeWarning(entry -> basetype, rtype);
 
         emitIFormat(OP_SW, previousTemporary(), currentTemporary(), 0);
 
@@ -3878,7 +3878,7 @@ void gr_statement() {
       else
         syntaxErrorSymbol(SYM_SEMICOLON);
 
-      ltype = getBaseType(getSymbolTableEntry(variableOrProcedureName,VARIABLE));
+      ltype = entry -> basetype;
 
     } else if (symbol == SYM_ARROW_OP) { //Struct access
       getSymbol();
@@ -3962,7 +3962,7 @@ void gr_statement() {
         else
           syntaxErrorSymbol(SYM_SEMICOLON);
 
-        ltype = getBaseType(getSymbolTableEntry(variableOrProcedureName,VARIABLE));
+        ltype = entry -> basetype;
 
       } else {
         syntaxErrorSymbol(SYM_IDENTIFIER);
@@ -3984,7 +3984,7 @@ void gr_statement() {
     } else if (symbol == SYM_ASSIGN) {
       entry = getVariable(variableOrProcedureName);
 
-      ltype = getType(entry);
+      ltype = entry -> type;
 
       getSymbol();
 
@@ -3993,7 +3993,7 @@ void gr_statement() {
       if (ltype != rtype)
         typeWarning(ltype, rtype);
 
-      emitIFormat(OP_SW, getScope(entry), currentTemporary(), getAddress(entry));
+      emitIFormat(OP_SW, entry -> scope, currentTemporary(), entry -> address);
 
       tfree(1);
 
@@ -4016,7 +4016,7 @@ void gr_statement() {
   else if (symbol == SYM_RETURN) {
     entry = getSymbolTableEntry(currentProcedureName, PROCEDURE);
 
-    gr_return(getType(entry));
+    gr_return(entry -> type);
 
     if (symbol == SYM_SEMICOLON)
       getSymbol();
@@ -4093,7 +4093,7 @@ int gr_struct(int table) {
                       setFieldSize(newField,0);
                       setFieldSize2(newField,0);
                       setFieldOffset(newField, address);
-                      setFieldFields(newField, getFields(getVariable(structType)));
+                      setFieldFields(newField, entry -> fields);
                     } else
                       syntaxErrorSymbol(SYM_SEMICOLON);
                 } else
@@ -4182,15 +4182,15 @@ int gr_struct(int table) {
       } else
         syntaxErrorSymbol(SYM_IDENTIFIER);
 
-      if(getFields(entry) != (int*) 0)
-        setNextField(newField,getFields(entry));
+      if(entry -> fields != (int*) 0)
+        setNextField(newField, entry -> fields);
       setFields(entry,newField);
     }
     if(symbol == SYM_RBRACE){
       getSymbol();
       if(symbol == SYM_SEMICOLON){
         if(selfRef) {
-            setFieldFields(newField, getFields(getVariable(structType)));
+            setFieldFields(newField, entry -> fields);
         }
 
         getSymbol();
@@ -4233,7 +4233,7 @@ int gr_variable(int offset) {
           rvalue = 1;
           entry = getVariable(structName);
           createSymbolTableEntry(LOCAL_TABLE,identifier,lineNumber,VARIABLE,INTSTAR_T,0,offset - WORDSIZE,0,0,INTSTAR_T);
-          fields = getFields(entry);
+          fields = entry -> fields;
           entry = getVariable(identifier);
           setFields(entry,fields);
           getSymbol();
@@ -4483,9 +4483,9 @@ void gr_procedure(int* procedure, int returnType) {
     if (entry == (int*) 0)
       createSymbolTableEntry(GLOBAL_TABLE, currentProcedureName, lineNumber, PROCEDURE, returnType, 0, binaryLength, 0, 0, 0);
     else {
-      if (getAddress(entry) != 0) {
-        if (getOpcode(loadBinary(getAddress(entry))) == OP_JAL)
-          fixlink_absolute(getAddress(entry), functionStart);
+      if (entry -> address != 0) {
+        if (getOpcode(loadBinary(entry -> address)) == OP_JAL)
+          fixlink_absolute(entry -> address, functionStart);
         else {
           printLineNumber((int*) "error", lineNumber);
           print((int*) "multiple definitions of ");
@@ -4497,8 +4497,8 @@ void gr_procedure(int* procedure, int returnType) {
       setLineNumber(entry, lineNumber);
       setAddress(entry, functionStart);
 
-      if (getType(entry) != returnType)
-        typeWarning(getType(entry), returnType);
+      if (entry -> type != returnType)
+        typeWarning(entry -> type, returnType);
 
       setType(entry, returnType);
     }
@@ -4604,7 +4604,7 @@ void gr_cstar() {
               allocatedMemory = allocatedMemory + WORDSIZE;
               createSymbolTableEntry(GLOBAL_TABLE,variableOrProcedureName,lineNumber,VARIABLE,INTSTAR_T,0,-allocatedMemory,0,0,0);
               entry = getVariable(variableOrProcedureName);
-              setFields(entry,getFields(getVariable(structName)));
+              setFields(entry,entry -> fields);
             } else
               syntaxErrorSymbol(SYM_SEMICOLON); //FIXME initialization here
           } else
@@ -5157,12 +5157,12 @@ void emitGlobalsStrings() {
 
   // allocate space for global variables and copy strings
   while ((int) entry != 0) {
-    if(getType(entry) != STRUCT_T) {// FIXME is this always correct?
-      if (getClass(entry) == VARIABLE) {
-        storeBinary(binaryLength, getValue(entry));
-        if(getType(entry) == INTSTAR_T){
-          arraysize = getSize(entry);
-          arraysize2 = getSize2(entry);
+    if(entry -> type != STRUCT_T) {// FIXME is this always correct?
+      if (entry -> class == VARIABLE) {
+        storeBinary(binaryLength, entry -> value);
+        if(entry -> type == INTSTAR_T){
+          arraysize = entry -> size;
+          arraysize2 = entry -> size2;
           if(arraysize > 0) {
             if(arraysize2 > 0){
               binaryLength = binaryLength + (arraysize * arraysize2 * WORDSIZE);
@@ -5172,8 +5172,8 @@ void emitGlobalsStrings() {
             binaryLength = binaryLength + WORDSIZE;
         } else
           binaryLength = binaryLength + WORDSIZE;
-      } else if (getClass(entry) == STRING)
-        binaryLength = copyStringToBinary(getString(entry), binaryLength);
+      } else if (entry -> class == STRING)
+        binaryLength = copyStringToBinary(entry -> string, binaryLength);
     }
     entry = entry -> next;
   }
