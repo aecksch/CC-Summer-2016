@@ -429,18 +429,18 @@ int  getFieldSize2(int* field)  { return        *(field + 4); }
 int  getFieldOffset(int* field) { return        *(field + 5); }
 int* getFieldFields(int* field) { return (int*) *(field + 6); }
 
-void setNextEntry(struct sym_table_entry *entry, struct sym_table_entry *next)    { entry -> next = next; }
-void setString(struct sym_table_entry *entry, int* identifier)   { entry -> string = (int*) identifier; }
-void setLineNumber(struct sym_table_entry *entry, int line)      { entry -> line  = line; }
-void setClass(struct sym_table_entry *entry, int class)          { entry -> class  = class; }
-void setType(struct sym_table_entry *entry, int type)            { entry -> type  = type; }
-void setValue(struct sym_table_entry *entry, int value)          { entry -> value  = value; }
-void setAddress(struct sym_table_entry *entry, int address)      { entry -> address  = address; }
-void setScope(struct sym_table_entry *entry, int scope)          { entry -> scope  = scope; }
-void setSize(struct sym_table_entry *entry, int size)            { entry -> size  = size; }
-void setSize2(struct sym_table_entry *entry, int size)           { entry -> size2  = size; }
-void setBaseType(struct sym_table_entry *entry, int baseType)    { entry -> basetype = baseType; }
-void setFields(struct sym_table_entry *entry, int* field)        { entry -> fields = field; }
+// void setNextEntry(struct sym_table_entry *entry, struct sym_table_entry *next)    { entry -> next = next; }
+// void setString(struct sym_table_entry *entry, int* identifier)   { entry -> string = (int*) identifier; }
+// void setLineNumber(struct sym_table_entry *entry, int line)      { entry -> line  = line; }
+// void setClass(struct sym_table_entry *entry, int class)          { entry -> class  = class; }
+// void setType(struct sym_table_entry *entry, int type)            { entry -> type  = type; }
+// void setValue(struct sym_table_entry *entry, int value)          { entry -> value  = value; }
+// void setAddress(struct sym_table_entry *entry, int address)      { entry -> address  = address; }
+// void setScope(struct sym_table_entry *entry, int scope)          { entry -> scope  = scope; }
+// void setSize(struct sym_table_entry *entry, int size)            { entry -> size  = size; }
+// void setSize2(struct sym_table_entry *entry, int size)           { entry -> size2  = size; }
+// void setBaseType(struct sym_table_entry *entry, int baseType)    { entry -> basetype = baseType; }
+// void setFields(struct sym_table_entry *entry, int* field)        { entry -> fields = field; }
 
 void setNextField(int* field, int* next)      { *field = (int) next; }
 void setFieldName(int* field, int* identifier){ *(field + 1) = (int) identifier; }
@@ -2079,34 +2079,50 @@ int getSymbol() {
 // -----------------------------------------------------------------
 
 void createSymbolTableEntry(int whichTable, int* string, int line, int class, int type, int value, int address, int size, int size2, int baseType) {
-  int* newEntry;
-
+  // int* newEntry;
+  struct sym_table_entry *newEntry;
   newEntry = malloc(3 * SIZEOFINTSTAR + 10 * SIZEOFINT);
 
-  setString(newEntry, string);
-  setLineNumber(newEntry, line);
-  setClass(newEntry, class);
-  setType(newEntry, type);
-  setValue(newEntry, value);
-  setAddress(newEntry, address);
-  setSize(newEntry, size);
-  setSize2(newEntry, size2);
-  setBaseType(newEntry, baseType);
-  setFields(newEntry,(int*)0);
+  // setString(newEntry, string);
+  newEntry -> string = string;
+  // setLineNumber(newEntry, line);
+  newEntry -> line  = line;
+  // setClass(newEntry, class);
+  newEntry -> class  = class;
+  // setType(newEntry, type);
+  newEntry -> type  = type;
+  // setValue(newEntry, value);
+  newEntry -> value  = value;
+  // setAddress(newEntry, address);
+  newEntry -> address  = address;
+  // setSize(newEntry, size);
+  newEntry -> size  = size;
+  // setSize2(newEntry, size2);
+  newEntry -> size2  = size2;
+  // setBaseType(newEntry, baseType);
+  newEntry -> basetype = baseType;
+  // setFields(newEntry,(int*)0);
+  newEntry -> fields = (int*) 0;
 
   // create entry at head of symbol table
   if (whichTable == GLOBAL_TABLE) {
-    setScope(newEntry, REG_GP);
-    setNextEntry(newEntry, global_symbol_table);
+    // setScope(newEntry, REG_GP);
+    newEntry -> scope  = REG_GP;
+    newEntry -> next = global_symbol_table;
+    // setNextEntry(newEntry, global_symbol_table);
     global_symbol_table = newEntry;
   } else if (whichTable == LOCAL_TABLE) {
-    setScope(newEntry, REG_FP);
-    setNextEntry(newEntry, local_symbol_table);
+    // setScope(newEntry, REG_FP);
+    newEntry -> scope  = REG_FP;
+    newEntry -> next = local_symbol_table;
+    // setNextEntry(newEntry, local_symbol_table);
     local_symbol_table = newEntry;
   } else {
     // library procedures
-    setScope(newEntry, REG_GP);
-    setNextEntry(newEntry, library_symbol_table);
+    // setScope(newEntry, REG_GP);
+    newEntry -> scope  = REG_GP;
+    newEntry -> next = library_symbol_table;
+    // setNextEntry(newEntry, library_symbol_table);
     library_symbol_table = newEntry;
   }
 }
@@ -2609,14 +2625,16 @@ int help_call_codegen(struct sym_table_entry *entry, int* procedure) {
 
     if (entry -> address == 0) {
       // CASE 2: function call, no definition, but declared.
-      setAddress(entry, binaryLength);
+      // setAddress(entry, binaryLength);
+      entry -> address  = binaryLength;
 
       emitJFormat(OP_JAL, 0);
     } else if (getOpcode(loadBinary(entry -> address)) == OP_JAL) {
       // CASE 3: function call, no declaration
       emitJFormat(OP_JAL, entry -> address / WORDSIZE);
 
-      setAddress(entry, binaryLength - 2 * WORDSIZE);
+      // setAddress(entry, binaryLength - 2 * WORDSIZE);
+      entry -> address  = (binaryLength - 2 * WORDSIZE);
     } else
       // CASE 4: function defined, use the address
       emitJFormat(OP_JAL, entry -> address / WORDSIZE);
@@ -4184,7 +4202,8 @@ int gr_struct(int table) {
 
       if(entry -> fields != (int*) 0)
         setNextField(newField, entry -> fields);
-      setFields(entry,newField);
+      // setFields(entry,newField);
+      entry -> fields = newField;
     }
     if(symbol == SYM_RBRACE){
       getSymbol();
@@ -4235,7 +4254,8 @@ int gr_variable(int offset) {
           createSymbolTableEntry(LOCAL_TABLE,identifier,lineNumber,VARIABLE,INTSTAR_T,0,offset - WORDSIZE,0,0,INTSTAR_T);
           fields = entry -> fields;
           entry = getVariable(identifier);
-          setFields(entry,fields);
+          // setFields(entry,fields);
+          entry -> fields = fields;
           getSymbol();
           if(symbol == SYM_SEMICOLON) //FIXME this could be done better
             getSymbol();
@@ -4451,7 +4471,8 @@ void gr_procedure(int* procedure, int returnType) {
 
       while (parameters < numberOfParameters) {
         // 8 bytes offset to skip frame pointer and link
-        setAddress(entry, parameters * WORDSIZE + 2 * WORDSIZE);
+        // setAddress(entry, parameters * WORDSIZE + 2 * WORDSIZE);
+        entry -> address  = parameters * WORDSIZE + 2 * WORDSIZE;
 
         parameters = parameters + 1;
         entry    = entry -> next;
@@ -4494,13 +4515,16 @@ void gr_procedure(int* procedure, int returnType) {
         }
       }
 
-      setLineNumber(entry, lineNumber);
-      setAddress(entry, functionStart);
+      // setLineNumber(entry, lineNumber);
+      entry -> line  = lineNumber;
+      // setAddress(entry, functionStart);
+      entry -> address  = functionStart;
 
       if (entry -> type != returnType)
         typeWarning(entry -> type, returnType);
 
-      setType(entry, returnType);
+      // setType(entry, returnType);
+      entry -> type  = returnType;
     }
 
     getSymbol();
@@ -4604,7 +4628,8 @@ void gr_cstar() {
               allocatedMemory = allocatedMemory + WORDSIZE;
               createSymbolTableEntry(GLOBAL_TABLE,variableOrProcedureName,lineNumber,VARIABLE,INTSTAR_T,0,-allocatedMemory,0,0,0);
               entry = getVariable(variableOrProcedureName);
-              setFields(entry,entry -> fields);
+              // setFields(entry,entry -> fields);
+              entry -> fields = entry -> fields;
             } else
               syntaxErrorSymbol(SYM_SEMICOLON); //FIXME initialization here
           } else
