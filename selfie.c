@@ -397,6 +397,7 @@ struct sym_table_entry {
  int size;
  int size2;
  int basetype;
+ int* fields;
 };
 
 // ------------------------ GLOBAL VARIABLES -----------------------
