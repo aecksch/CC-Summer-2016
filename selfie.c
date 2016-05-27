@@ -4086,13 +4086,12 @@ int gr_struct(int table) {
   structName = identifier;
   createSymbolTableEntry(table,structName,lineNumber,VARIABLE,STRUCT_T,0,0,0,0,0);
   entry = getVariable(structName);
-  //  getSymbol();
+
   if(symbol == SYM_LBRACE){
     getSymbol();
     while(lookForFields()) {
       type = gr_type();
       if(type == STRUCT_T){ //nested struct
-          //getSymbol();
         if(symbol == SYM_IDENTIFIER) {
             structType = identifier;
             if(stringCompare(structName,structType)) {
@@ -4141,8 +4140,7 @@ int gr_struct(int table) {
           if(atype != INT_T) {
             typeWarning(INT_T, atype);
           }
-          // type = INTSTAR_T;
-          //getSymbol();
+
           if(symbol != SYM_RBRACKET) {
             syntaxErrorSymbol(SYM_RBRACKET);
           }
@@ -4183,7 +4181,6 @@ int gr_struct(int table) {
           }
 
         } else {
-          //getSymbol();
           if(symbol == SYM_SEMICOLON){
             newField = malloc(6 * WORDSIZE);
             address = address + 1;
@@ -4264,13 +4261,13 @@ int gr_variable(int offset) {
           else if(symbol == SYM_RPARENTHESIS)
             return rvalue;
           else
-            syntaxErrorUnexpected(symbol);
+            syntaxErrorUnexpected();
         } else
           syntaxErrorSymbol(SYM_IDENTIFIER);
       } else if(symbol == SYM_LBRACE) {
         gr_struct(LOCAL_TABLE);
       } else
-        syntaxErrorUnexpected(symbol);
+        syntaxErrorUnexpected();
     } else
       syntaxErrorSymbol(SYM_IDENTIFIER);
   }
@@ -4292,8 +4289,7 @@ int gr_variable(int offset) {
       if(atype != INT_T) {
         typeWarning(INT_T, atype);
       }
-      type = INTSTAR_T;
-      //getSymbol();
+
       if(symbol != SYM_RBRACKET) {
         syntaxErrorSymbol(SYM_RBRACKET);
       }
@@ -4335,7 +4331,7 @@ int gr_variable(int offset) {
       else if(symbol == SYM_RPARENTHESIS)
         return rvalue;
       else
-        syntaxErrorUnexpected(symbol);
+        syntaxErrorUnexpected();
 
     } else {
       rvalue = 1;
@@ -4348,7 +4344,7 @@ int gr_variable(int offset) {
       else if(symbol == SYM_RPARENTHESIS)
         return rvalue;
       else
-        syntaxErrorUnexpected(symbol);
+        syntaxErrorUnexpected();
     }
 
   } else {
@@ -4580,7 +4576,6 @@ void gr_cstar() {
   int* structName;
   struct sym_table_entry *entry;
   int firstDimValue;
-
 
   if(gr_attribute == (int*) 0) {
     gr_attribute = malloc(8);
