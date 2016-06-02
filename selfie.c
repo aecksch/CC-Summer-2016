@@ -408,18 +408,18 @@ struct sym_table_entry* local_symbol_table; //   = (int*) 0;
 struct sym_table_entry* library_symbol_table; // = (int*) 0;
 int* gr_attribute = (int*) 0; //FIXME
 
-int* getNextEntry(struct sym_table_entry *entry)  { return (int*) entry -> next;       }
-int* getString(struct sym_table_entry *entry)     { return (int*) entry -> string; }
-int  getLineNumber(struct sym_table_entry *entry) { return        entry -> line; }
-int  getClass(struct sym_table_entry *entry)      { return        entry -> class; }
-int  getType(struct sym_table_entry *entry)       { return        entry -> type; }
-int  getValue(struct sym_table_entry *entry)      { return        entry -> value; }
-int  getAddress(struct sym_table_entry *entry)    { return        entry -> address; }
-int  getScope(struct sym_table_entry *entry)      { return        entry -> scope; }
-int  getSize(struct sym_table_entry *entry)       { return        entry -> size; }
-int  getSize2(struct sym_table_entry *entry)      { return        entry -> size2; }
-int  getBaseType(struct sym_table_entry *entry)   { return        entry -> basetype;}
-int* getFields(struct sym_table_entry *entry)     { return (int*) entry -> fields;}
+//int* getNextEntry(struct sym_table_entry *entry)  { return (int*) entry -> next;       }
+//int* getString(struct sym_table_entry *entry)     { return (int*) entry -> string; }
+//int  getLineNumber(struct sym_table_entry *entry) { return        entry -> line; }
+//int  getClass(struct sym_table_entry *entry)      { return        entry -> class; }
+//int  getType(struct sym_table_entry *entry)       { return        entry -> type; }
+//int  getValue(struct sym_table_entry *entry)      { return        entry -> value; }
+//int  getAddress(struct sym_table_entry *entry)    { return        entry -> address; }
+//int  getScope(struct sym_table_entry *entry)      { return        entry -> scope; }
+//int  getSize(struct sym_table_entry *entry)       { return        entry -> size; }
+//int  getSize2(struct sym_table_entry *entry)      { return        entry -> size2; }
+//int  getBaseType(struct sym_table_entry *entry)   { return        entry -> basetype;}
+//int* getFields(struct sym_table_entry *entry)     { return (int*) entry -> fields;}
 
 int* getNextField(int* field)   { return (int*) *field;       }
 int* getFieldName(int* field)   { return (int*) *(field + 1); }
@@ -429,18 +429,18 @@ int  getFieldSize2(int* field)  { return        *(field + 4); }
 int  getFieldOffset(int* field) { return        *(field + 5); }
 int* getFieldFields(int* field) { return (int*) *(field + 6); }
 
-void setNextEntry(struct sym_table_entry *entry, struct sym_table_entry *next)    { entry -> next = next; }
-void setString(struct sym_table_entry *entry, int* identifier)   { entry -> string = (int*) identifier; }
-void setLineNumber(struct sym_table_entry *entry, int line)      { entry -> line  = line; }
-void setClass(struct sym_table_entry *entry, int class)          { entry -> class  = class; }
-void setType(struct sym_table_entry *entry, int type)            { entry -> type  = type; }
-void setValue(struct sym_table_entry *entry, int value)          { entry -> value  = value; }
-void setAddress(struct sym_table_entry *entry, int address)      { entry -> address  = address; }
-void setScope(struct sym_table_entry *entry, int scope)          { entry -> scope  = scope; }
-void setSize(struct sym_table_entry *entry, int size)            { entry -> size  = size; }
-void setSize2(struct sym_table_entry *entry, int size)           { entry -> size2  = size; }
-void setBaseType(struct sym_table_entry *entry, int baseType)    { entry -> basetype = baseType; }
-void setFields(struct sym_table_entry *entry, int* field)        { entry -> fields = field; }
+// void setNextEntry(struct sym_table_entry *entry, struct sym_table_entry *next)    { entry -> next = next; }
+// void setString(struct sym_table_entry *entry, int* identifier)   { entry -> string = (int*) identifier; }
+// void setLineNumber(struct sym_table_entry *entry, int line)      { entry -> line  = line; }
+// void setClass(struct sym_table_entry *entry, int class)          { entry -> class  = class; }
+// void setType(struct sym_table_entry *entry, int type)            { entry -> type  = type; }
+// void setValue(struct sym_table_entry *entry, int value)          { entry -> value  = value; }
+// void setAddress(struct sym_table_entry *entry, int address)      { entry -> address  = address; }
+// void setScope(struct sym_table_entry *entry, int scope)          { entry -> scope  = scope; }
+// void setSize(struct sym_table_entry *entry, int size)            { entry -> size  = size; }
+// void setSize2(struct sym_table_entry *entry, int size)           { entry -> size2  = size; }
+// void setBaseType(struct sym_table_entry *entry, int baseType)    { entry -> basetype = baseType; }
+// void setFields(struct sym_table_entry *entry, int* field)        { entry -> fields = field; }
 
 void setNextField(int* field, int* next)      { *field = (int) next; }
 void setFieldName(int* field, int* identifier){ *(field + 1) = (int) identifier; }
@@ -3826,11 +3826,10 @@ void gr_statement() {
     //   print("Address of Array: ");
     //   print(itoa(getAddress(entry), string_buffer, 10, 0, 0));
     //   println();
+
       if(entry -> address > 0){
         load_variable(variableOrProcedureName);
       } else if(entry -> size == 0) { //if we access an pointer like an array we have to load
-        load_variable(variableOrProcedureName);
-      } else if(getSize(entry) == 0) { //if we access an pointer like an array we have to load
         load_variable(variableOrProcedureName);
       } else {
         talloc();
@@ -4142,7 +4141,6 @@ int gr_struct(int table) {
           if(atype != INT_T) {
             typeWarning(INT_T, atype);
           }
-
           if(symbol != SYM_RBRACKET) {
             syntaxErrorSymbol(SYM_RBRACKET);
           }
@@ -4235,7 +4233,6 @@ int gr_variable(int offset) {
   firstDimValue = 0;
   atype = 0;
   entry = (int*) 0;
-
   type = gr_type();
 
   if(gr_attribute == (int*)0)//FIXME
