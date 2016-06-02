@@ -21,6 +21,8 @@ identifier       = letter { letter | digit | "_" } .
 
 type             = "int" [ "*" ] .
 
+struct 	 	 = "struct" identifier "{" { ("struct" identifier identifier | type identifier) } "};"
+
 cast             = "(" type ")" .
 
 call             = identifier "(" [ expression { "," expression } ] ")" .
@@ -37,9 +39,11 @@ term             = factor { ( "*" | "/" | "%" ) factor } .
 
 simpleExpression = [ "-" ] term { ( "+" | "-" ) term } .
 
-shiftExpression = simpleExpression { ( "<<" | ">>" ) simpleExpression } .
+shiftExpression  = simpleExpression { ( "<<" | ">>" ) simpleExpression } .
 
-expression       = shiftExpression [ ( "==" | "!=" | "<" | ">" | "<=" | ">=" ) shiftExpression ] .
+compexpression   = shiftExpression [ ( "==" | "!=" | "<" | ">" | "<=" | ">=" ) shiftExpression ] .
+
+expression	 = ["!"] compexpression { ("&&" | "||") ["!"] compexpression } .    
 
 while            = "while" "(" expression ")"
                              ( statement |

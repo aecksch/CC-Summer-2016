@@ -142,6 +142,8 @@ int CHAR_SINGLEQUOTE  = 39; // ASCII code 39 = '
 int CHAR_DOUBLEQUOTE  = '"';
 int CHAR_LBRACKET     = '[';
 int CHAR_RBRACKET     = ']';
+int CHAR_AND          = '&';
+int CHAR_BAR          = '|';
 
 int SIZEOFINT     = 4; // must be the same as WORDSIZE
 int SIZEOFINTSTAR = 4; // must be the same as WORDSIZE
@@ -282,8 +284,11 @@ int SYM_LBRACKET     = 30; // [
 int SYM_RBRACKET     = 31; // ]
 int SYM_STRUCT       = 32; // STRUCT
 int SYM_ARROW_OP     = 33; // ->
+int SYM_AND          = 34; // &&
+int SYM_OR           = 35; // ||
+int SYM_NOT          = 36; // !
 
-int SYMBOLS[34][2]; // array of strings representing symbols
+int SYMBOLS[37][2]; // array of strings representing symbols
 
 int maxIdentifierLength = 64; // maximum number of characters in an identifier
 int maxIntegerLength    = 10; // maximum number of characters in an integer
@@ -348,9 +353,12 @@ void initScanner () {
   SYMBOLS[SYM_RBRACKET][0]     = (int) "]";
   SYMBOLS[SYM_STRUCT][0]       = (int) "struct";
   SYMBOLS[SYM_ARROW_OP][0]     = (int) "->";
+  SYMBOLS[SYM_AND][0]          = (int) "&&";
+  SYMBOLS[SYM_OR][0]           = (int) "||";
+  SYMBOLS[SYM_NOT][0]          = (int) "!";
 
   i = SYM_IDENTIFIER;
-  while(i < 34) {
+  while(i < 37) {
     SYMBOLS[i][1] = 0;
     i = i + 1;
   }
@@ -2035,14 +2043,14 @@ int getSymbol() {
   } else if (character == CHAR_EXCLAMATION) {
     getCharacter();
 
-    if (character == CHAR_EQUAL)
+    if (character == CHAR_EQUAL){
       getCharacter();
-    else
-      syntaxErrorCharacter(CHAR_EQUAL);
-
-    SYMBOLS[SYM_NOTEQ][1] = SYMBOLS[SYM_NOTEQ][1] + 1;
-    symbol = SYM_NOTEQ;
-
+      symbol = SYM_NOTEQ;
+      SYMBOLS[SYM_NOTEQ][1] = SYMBOLS[SYM_NOTEQ][1] + 1;
+    } else {
+      symbol = SYM_NOT;
+      SYMBOLS[SYM_NOT][1] = SYMBOLS[SYM_NOT][1] + 1;
+    }
   } else if (character == CHAR_PERCENTAGE) {
     getCharacter();
 
@@ -2060,6 +2068,24 @@ int getSymbol() {
 
     SYMBOLS[SYM_LBRACKET][1] = SYMBOLS[SYM_LBRACKET][1] + 1;
     symbol = SYM_LBRACKET;
+
+  } else if (character == CHAR_AND){
+    getCharacter();
+    if (character == CHAR_AND){
+      getCharacter();
+      SYMBOLS[SYM_AND][1] = SYMBOLS[SYM_AND][1] + 1;
+      symbol = SYM_AND;
+    } else
+      syntaxErrorCharacter(CHAR_AND);
+
+  } else if (character == CHAR_BAR){
+    getCharacter();
+    if (character == CHAR_BAR){
+      getCharacter();
+      SYMBOLS[SYM_OR][1] = SYMBOLS[SYM_OR][1] + 1;
+      symbol = SYM_OR;
+    } else
+      syntaxErrorCharacter(CHAR_BAR);
 
   } else {
     printLineNumber((int*) "error", lineNumber);
@@ -2288,6 +2314,15 @@ int isShift(){
         return 1;
     else
         return 0;
+}
+
+int isBoolean(){
+  if (symbol == SYM_AND)
+    return 1;
+  else if (symbol == SYM_OR)
+    return 1;
+  else
+    return 0;
 }
 
 int isComparison() {
