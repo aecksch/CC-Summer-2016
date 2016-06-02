@@ -3560,6 +3560,8 @@ int gr_compExpression(int* gr_attribute) {
       emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 0);
     }
   }
+
+  return ltype;
 }
 
 int gr_expression() {
