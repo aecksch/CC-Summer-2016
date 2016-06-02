@@ -3016,7 +3016,7 @@ int gr_factor(int* gr_attribute) {
           // emitLeftShiftBy(2);
           emitIFormat(OP_ADDIU, currentTemporary(), currentTemporary(), (offset * WORDSIZE));
           emitIFormat(OP_LW, currentTemporary(), currentTemporary(), 0);
-          //  getSymbol();
+          type = getFieldType(field);
         }
       }
     }
