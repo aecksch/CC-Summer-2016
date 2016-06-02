@@ -3620,12 +3620,12 @@ int gr_expression() {
         } else { //Negation
           emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
           emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
+          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
         }
 
         emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
       } else {
-        emitIFormat(OP_BNE, REG_ZR, previousTemporary(), 4);
+        emitIFormat(OP_BNE, REG_ZR, previousTemporary(), 5);
         if(isNegR == 0) {
           emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
           emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
@@ -3633,7 +3633,7 @@ int gr_expression() {
         } else { //Negation
           emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
           emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
+          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
         }
 
         emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
@@ -3641,6 +3641,9 @@ int gr_expression() {
 
 
       tfree(1);
+
+      isNegL = 0;
+      isNegR = 0;
 
     } else if (operatorSymbol == SYM_OR) {
       // check if left Operand != 0
@@ -3653,12 +3656,12 @@ int gr_expression() {
         } else { //Negation
           emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
           emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
+          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
         }
 
         emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
       } else {
-        emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), 4);
+        emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), 5);
         if(isNegR == 0) {
           emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
           emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
@@ -3666,7 +3669,7 @@ int gr_expression() {
         } else { //Negation
           emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
           emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
+          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
         }
 
         emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
@@ -3674,6 +3677,9 @@ int gr_expression() {
 
 
       tfree(1);
+
+      isNegL = 0;
+      isNegR = 0;
     }
   }
 
