@@ -2078,14 +2078,14 @@ int getSymbol() {
     } else
       syntaxErrorCharacter(CHAR_AND);
 
-  } else if (character == CHAR_OR){
+  } else if (character == CHAR_BAR){
     getCharacter();
-    if (character == CHAR_OR){
+    if (character == CHAR_BAR){
       getCharacter();
       SYMBOLS[SYM_OR][1] = SYMBOLS[SYM_OR][1] + 1;
       symbol = SYM_OR;
     } else
-      syntaxErrorCharacter(CHAR_OR);
+      syntaxErrorCharacter(CHAR_BAR);
 
   } else {
     printLineNumber((int*) "error", lineNumber);
