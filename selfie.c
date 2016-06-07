@@ -1724,11 +1724,8 @@ int isCharacterLetter() {
 }
 
 int isCharacterDigit() {
-  if (character >= '0')
-    if (character <= '9')
-      return 1;
-    else
-      return 0;
+  if (character >= '0' && character <= '9')
+    return 1;
   else
     return 0;
 }
@@ -2315,6 +2312,22 @@ int isShift(){
         return 1;
     else
         return 0;
+}
+
+int isNotEndOfExpression() {
+  if(symbol == SYM_RPARENTHESIS) {
+    return 0;
+  } else if (symbol == SYM_SEMICOLON) {
+    return 0;
+  } else if (symbol == SYM_COMMA) {
+    return 0;
+  } else if (symbol == SYM_EOF) {
+    return 0;
+  } else if (symbol == SYM_RBRACKET) {
+    return 0;
+  }
+
+  return 1;
 }
 
 int isBoolean(){
@@ -3567,11 +3580,13 @@ int gr_compExpression(int* gr_attribute) {
 
 int gr_expression() {
   int ltype;
-  int operatorSymbol;
+  int wasBoolean;
   int rtype;
   int isNeg;
   int branchToOrOrEnd;
   int branchToAndOrEnd;
+  int wasInWhile;
+  int operatorSymbol;
 
   if(gr_attribute == (int*)0)//FIXME
     gr_attribute = malloc(8);
@@ -3581,95 +3596,73 @@ int gr_expression() {
   isNeg = 0;
   branchToOrOrEnd = 0;
   branchToAndOrEnd = 0;
+  wasBoolean = 0;
+  wasInWhile = 0;
 
-  if(symbol == SYM_NOT) {
-    getSymbol();
-    isNeg = 1;
-  }
+  while(isNotEndOfExpression()) {
+      wasInWhile = 1;
 
-  ltype = gr_compExpression(gr_attribute);
-  if(isNeg) {
-    emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
-    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 1);
-    emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
-    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 0);
-  }
-  // assert: allocatedTemporaries == n + 1
-  isNeg = 0;
-  //optional: &&, || compExpression
-  while(isBoolean()) {
-    operatorSymbol = symbol;
+      if(symbol == SYM_NOT) {
+        getSymbol();
+        isNeg = 1;
+      }
 
-    getSymbol();
-    if(symbol == SYM_NOT) {
-      print("Neg");
-      println();
-      getSymbol();
-      isNeg = 1;
+      ltype = gr_compExpression(gr_attribute);
+
+      if(isNeg) {
+        emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
+        emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 1);
+        emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
+        emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 0);
+      }
+      // assert: allocatedTemporaries == n + 2
+
+
+
+      if(isBoolean()) {
+        // operatorSymbol = symbol;
+        // getSymbol();
+
+        //TODO: warning here ok?
+        if (ltype != INT_T)
+          typeWarning(ltype, INT_T);
+
+        wasBoolean = 1;
+        if (symbol == SYM_AND) {
+          getSymbol();
+
+          fixlink_relative(branchToAndOrEnd);
+
+          // check if left Operand != 0
+          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), branchToOrOrEnd / WORDSIZE); //fixup
+          branchToOrOrEnd = binaryLength - 2 * WORDSIZE;
+
+          branchToAndOrEnd = 0;
+
+        } else if (symbol == SYM_OR) {
+          getSymbol();
+
+          fixlink_relative(branchToOrOrEnd);
+
+          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), branchToAndOrEnd / WORDSIZE); //fixup
+          branchToAndOrEnd = binaryLength - 2 * WORDSIZE;
+
+          branchToOrOrEnd = 0;
+        }
+        isNeg = 0;
+        tfree(1);
+      }
     }
 
-    rtype = gr_compExpression(gr_attribute);
-    if(isNeg) {
-      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
-      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
-      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-    }
-    // assert: allocatedTemporaries == n + 2
 
-    //TODO: warning here ok?
-    if (ltype != INT_T)
-      typeWarning(ltype, INT_T);
-
-    //branchToEnd = binaryLength;
-
-    if (operatorSymbol == SYM_AND) {
-
-      fixlink_relative(branchToAndOrEnd);
-
-
-      // check if left Operand != 0
-
-      emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), branchToOrOrEnd/WORDSIZE); //fixup
-      branchToOrOrEnd = binaryLength;
-
-      emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
-      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
-
-      //emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-
-
-      tfree(1);
-
-      branchToAndOrEnd = 0;
-
-    } else if (operatorSymbol == SYM_OR) {
-
-      fixlink_relative(branchToOrOrEnd);
-
-
-      emitIFormat(OP_BNE, REG_ZR, previousTemporary(), branchToAndOrEnd/WORDSIZE); //fixup
-      branchToAndOrEnd = binaryLength;
-
-      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
-      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-      emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
-
-      tfree(1);
-
-      branchToOrOrEnd = 0;
-    }
-    isNeg = 0;
-  }
-
-  if(operatorSymbol != 0) {
-    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 1);
-    fixlink_relative(branchToAndOrEnd);
+  if(wasBoolean != 0) {
     fixlink_relative(branchToOrOrEnd);
+    fixlink_relative(branchToAndOrEnd);
   }
 
-
+  if(wasInWhile == 0) {
+    ltype = gr_compExpression(gr_attribute);
+  }
 
   return ltype;
 }
@@ -5278,7 +5271,7 @@ void fixlink_relative(int fromAddress) {
   int previousAddress;
 
   while (fromAddress != 0) {
-    previousAddress = getInstrIndex(loadBinary(fromAddress)) * WORDSIZE;
+    previousAddress = getImmediate(loadBinary(fromAddress)) * WORDSIZE;
 
     fixup_relative(fromAddress);
 
