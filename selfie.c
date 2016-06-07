@@ -783,6 +783,7 @@ void emitJFormat(int opcode, int instr_index);
 void fixup_relative(int fromAddress);
 void fixup_absolute(int fromAddress, int toAddress);
 void fixlink_absolute(int fromAddress, int toAddress);
+void fixlink_relative(int fromAddress);
 
 int copyStringToBinary(int* s, int a);
 
@@ -3569,7 +3570,8 @@ int gr_expression() {
   int operatorSymbol;
   int rtype;
   int isNeg;
-  int branchToEnd;
+  int branchToOrOrEnd;
+  int branchToAndOrEnd;
 
   if(gr_attribute == (int*)0)//FIXME
     gr_attribute = malloc(8);
@@ -3577,7 +3579,8 @@ int gr_expression() {
   // assert: n = allocatedTemporaries
 
   isNeg = 0;
-  branchToEnd = 0;
+  branchToOrOrEnd = 0;
+  branchToAndOrEnd = 0;
 
   if(symbol == SYM_NOT) {
     getSymbol();
@@ -3615,40 +3618,58 @@ int gr_expression() {
     // assert: allocatedTemporaries == n + 2
 
     //TODO: warning here ok?
-    if (ltype != rtype)
-      typeWarning(ltype, rtype);
+    if (ltype != INT_T)
+      typeWarning(ltype, INT_T);
+
+    //branchToEnd = binaryLength;
 
     if (operatorSymbol == SYM_AND) {
 
+      fixlink_relative(branchToAndOrEnd);
+
+
       // check if left Operand != 0
 
-      emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), 4);
+      emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), branchToOrOrEnd/WORDSIZE); //fixup
+      branchToOrOrEnd = binaryLength;
 
       emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
       emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
       emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
 
-      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
+      //emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
 
 
       tfree(1);
 
+      branchToAndOrEnd = 0;
+
     } else if (operatorSymbol == SYM_OR) {
 
-      emitIFormat(OP_BNE, REG_ZR, previousTemporary(), 4);
-      
+      fixlink_relative(branchToOrOrEnd);
+
+
+      emitIFormat(OP_BNE, REG_ZR, previousTemporary(), branchToAndOrEnd/WORDSIZE); //fixup
+      branchToAndOrEnd = binaryLength;
+
       emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
       emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
       emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
 
-      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-
-
       tfree(1);
 
+      branchToOrOrEnd = 0;
     }
     isNeg = 0;
   }
+
+  if(operatorSymbol != 0) {
+    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 1);
+    fixlink_relative(branchToAndOrEnd);
+    fixlink_relative(branchToOrOrEnd);
+  }
+
+
 
   return ltype;
 }
