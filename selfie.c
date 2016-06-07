@@ -3568,26 +3568,31 @@ int gr_expression() {
   int ltype;
   int operatorSymbol;
   int rtype;
-  int isNegL;
-  int isNegR;
+  int isNeg;
+  int branchToEnd;
 
-  //  if(gr_attribute == (int*)0)//FIXME
-        // gr_attribute = malloc(8);
+  if(gr_attribute == (int*)0)//FIXME
+    gr_attribute = malloc(8);
 
   // assert: n = allocatedTemporaries
 
-  isNegL = 0;
-  isNegR = 0;
+  isNeg = 0;
+  branchToEnd = 0;
 
   if(symbol == SYM_NOT) {
     getSymbol();
-    isNegL = 1;
+    isNeg = 1;
   }
 
   ltype = gr_compExpression(gr_attribute);
-
+  if(isNeg) {
+    emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
+    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 1);
+    emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
+    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 0);
+  }
   // assert: allocatedTemporaries == n + 1
-
+  isNeg = 0;
   //optional: &&, || compExpression
   while(isBoolean()) {
     operatorSymbol = symbol;
@@ -3597,11 +3602,16 @@ int gr_expression() {
       print("Neg");
       println();
       getSymbol();
-      isNegR = 1;
+      isNeg = 1;
     }
 
     rtype = gr_compExpression(gr_attribute);
-
+    if(isNeg) {
+      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
+      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
+      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
+      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
+    }
     // assert: allocatedTemporaries == n + 2
 
     //TODO: warning here ok?
@@ -3611,78 +3621,34 @@ int gr_expression() {
     if (operatorSymbol == SYM_AND) {
 
       // check if left Operand != 0
-      if(isNegL == 0) {
-        emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), 4);
-        if(isNegR == 0) {
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
-        } else { //Negation
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
-        }
 
-        emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-      } else {
-        emitIFormat(OP_BNE, REG_ZR, previousTemporary(), 5);
-        if(isNegR == 0) {
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
-        } else { //Negation
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
-        }
+      emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), 4);
 
-        emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-      }
+      emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
+      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
+      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
+
+      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
 
 
       tfree(1);
-
-      isNegL = 0;
-      isNegR = 0;
 
     } else if (operatorSymbol == SYM_OR) {
-      // check if left Operand != 0
-      if(isNegL == 0) {
-        emitIFormat(OP_BNE, REG_ZR, previousTemporary(), 4);
-        if(isNegR == 0) {
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
-        } else { //Negation
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
-        }
 
-        emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-      } else {
-        emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), 5);
-        if(isNegR == 0) {
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
-        } else { //Negation
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
-        }
+      emitIFormat(OP_BNE, REG_ZR, previousTemporary(), 4);
+      
+      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
+      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
+      emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
 
-        emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-      }
+      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
 
 
       tfree(1);
 
-      isNegL = 0;
-      isNegR = 0;
     }
+    isNeg = 0;
   }
-
 
   return ltype;
 }
