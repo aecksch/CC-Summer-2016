@@ -3622,8 +3622,6 @@ int gr_expression() {
     if (ltype != INT_T)
       typeWarning(ltype, INT_T);
 
-    //branchToEnd = binaryLength;
-
     if (operatorSymbol == SYM_AND) {
 
       //fixlink_relative(branchToAndOrEnd);
@@ -3648,10 +3646,10 @@ int gr_expression() {
 
 
       emitIFormat(OP_BNE, REG_ZR, previousTemporary(), branchToAndOrEnd / WORDSIZE); //fixup
-      branchToOrOrEnd = binaryLength - 2 * WORDSIZE;
+      branchToAndOrEnd = binaryLength - 2 * WORDSIZE;
 
       emitIFormat(OP_BNE, REG_ZR, currentTemporary(), branchToAndOrEnd / WORDSIZE);
-      branchToOrOrEnd = binaryLength - 2 * WORDSIZE;
+      branchToAndOrEnd = binaryLength - 2 * WORDSIZE;
 
       emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
 
@@ -3663,7 +3661,6 @@ int gr_expression() {
   }
 
   if(operatorSymbol != 0) {
-    //emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 1);
     fixlink_relative(branchToAndOrEnd);
     fixlink_relative(branchToOrOrEnd);
   }
@@ -5277,7 +5274,7 @@ void fixlink_relative(int fromAddress) {
   int previousAddress;
 
   while (fromAddress != 0) {
-    previousAddress = getInstrIndex(loadBinary(fromAddress)) * WORDSIZE;
+    previousAddress = getImmediate(loadBinary(fromAddress)) * WORDSIZE;
 
     fixup_relative(fromAddress);
 
