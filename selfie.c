@@ -3581,6 +3581,7 @@ int gr_expression() {
   isNeg = 0;
   branchToOrOrEnd = 0;
   branchToAndOrEnd = 0;
+  operatorSymbol = 0;
 
   if(symbol == SYM_NOT) {
     getSymbol();
@@ -3625,46 +3626,44 @@ int gr_expression() {
 
     if (operatorSymbol == SYM_AND) {
 
-      fixlink_relative(branchToAndOrEnd);
+      //fixlink_relative(branchToAndOrEnd);
 
 
       // check if left Operand != 0
+      emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), branchToOrOrEnd / WORDSIZE); //fixup
+      branchToOrOrEnd = binaryLength - 2 * WORDSIZE;
 
-      emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), branchToOrOrEnd/WORDSIZE); //fixup
-      branchToOrOrEnd = binaryLength;
+      emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), branchToOrOrEnd / WORDSIZE);
+      branchToOrOrEnd = binaryLength - 2 * WORDSIZE;
 
-      emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
       emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
-
-      //emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-
 
       tfree(1);
 
-      branchToAndOrEnd = 0;
+      //branchToAndOrEnd = 0;
 
     } else if (operatorSymbol == SYM_OR) {
 
-      fixlink_relative(branchToOrOrEnd);
+      //fixlink_relative(branchToOrOrEnd);
 
 
-      emitIFormat(OP_BNE, REG_ZR, previousTemporary(), branchToAndOrEnd/WORDSIZE); //fixup
-      branchToAndOrEnd = binaryLength;
+      emitIFormat(OP_BNE, REG_ZR, previousTemporary(), branchToAndOrEnd / WORDSIZE); //fixup
+      branchToOrOrEnd = binaryLength - 2 * WORDSIZE;
 
-      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
+      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), branchToAndOrEnd / WORDSIZE);
+      branchToOrOrEnd = binaryLength - 2 * WORDSIZE;
+
       emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-      emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
 
       tfree(1);
 
-      branchToOrOrEnd = 0;
+      //branchToOrOrEnd = 0;
     }
     isNeg = 0;
   }
 
   if(operatorSymbol != 0) {
-    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 1);
+    //emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 1);
     fixlink_relative(branchToAndOrEnd);
     fixlink_relative(branchToOrOrEnd);
   }
