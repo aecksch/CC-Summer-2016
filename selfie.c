@@ -2326,6 +2326,8 @@ int isNotEndOfExpression() {
     return 0;
   } else if (symbol == SYM_EOF) {
     return 0;
+  } else if (symbol == SYM_RBRACKET) {
+    return 0;
   }
 
   return 1;
@@ -3586,6 +3588,8 @@ int gr_expression() {
   int isNeg;
   int branchToOrOrEnd;
   int branchToAndOrEnd;
+  int wasInWhile;
+  int operatorSymbol;
 
   if(gr_attribute == (int*)0)//FIXME
     gr_attribute = malloc(8);
@@ -3596,8 +3600,10 @@ int gr_expression() {
   branchToOrOrEnd = 0;
   branchToAndOrEnd = 0;
   wasBoolean = 0;
+  wasInWhile = 0;
 
   while(isNotEndOfExpression()) {
+      wasInWhile = 1;
 
       if(symbol == SYM_NOT) {
         getSymbol();
@@ -3614,13 +3620,18 @@ int gr_expression() {
       }
       // assert: allocatedTemporaries == n + 2
 
-      //TODO: warning here ok?
-      if (ltype != INT_T)
-        typeWarning(ltype, INT_T);
+
 
       if(isBoolean()) {
+        operatorSymbol = symbol;
+        getSymbol();
+
+        //TODO: warning here ok?
+        if (ltype != INT_T)
+          typeWarning(ltype, INT_T);
+
         wasBoolean = 1;
-        if (symbol == SYM_AND) {
+        if (operatorSymbol == SYM_AND) {
           getSymbol();
 
           fixlink_relative(branchToAndOrEnd);
@@ -3631,7 +3642,7 @@ int gr_expression() {
 
           branchToAndOrEnd = 0;
 
-        } else if (symbol == SYM_OR) {
+        } else if (operatorSymbol == SYM_OR) {
           getSymbol();
 
           fixlink_relative(branchToOrOrEnd);
@@ -3650,6 +3661,10 @@ int gr_expression() {
   if(wasBoolean != 0) {
     fixlink_relative(branchToOrOrEnd);
     fixlink_relative(branchToAndOrEnd);
+  }
+
+  if(wasInWhile == 0) {
+    ltype = gr_compExpression(gr_attribute);
   }
 
   return ltype;
