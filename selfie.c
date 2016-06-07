@@ -3624,7 +3624,7 @@ int gr_expression() {
 
     if (operatorSymbol == SYM_AND) {
 
-      //fixlink_relative(branchToAndOrEnd);
+      fixlink_relative(branchToAndOrEnd);
 
 
       // check if left Operand != 0
@@ -3638,11 +3638,11 @@ int gr_expression() {
 
       tfree(1);
 
-      //branchToAndOrEnd = 0;
+      branchToAndOrEnd = 0;
 
     } else if (operatorSymbol == SYM_OR) {
 
-      //fixlink_relative(branchToOrOrEnd);
+      fixlink_relative(branchToOrOrEnd);
 
 
       emitIFormat(OP_BNE, REG_ZR, previousTemporary(), branchToAndOrEnd / WORDSIZE); //fixup
@@ -3655,7 +3655,7 @@ int gr_expression() {
 
       tfree(1);
 
-      //branchToOrOrEnd = 0;
+      branchToOrOrEnd = 0;
     }
     isNeg = 0;
   }
