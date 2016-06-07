@@ -5287,6 +5287,18 @@ void fixup_relative(int fromAddress) {
       (binaryLength - fromAddress - WORDSIZE) / WORDSIZE));
 }
 
+void fixlink_relative(int fromAddress) {
+  int previousAddress;
+
+  while (fromAddress != 0) {
+    previousAddress = getInstrIndex(loadBinary(fromAddress)) * WORDSIZE;
+
+    fixup_relative(fromAddress);
+
+    fromAddress = previousAddress;
+  }
+}
+
 void fixup_absolute(int fromAddress, int toAddress) {
   storeBinary(fromAddress,
     encodeJFormat(getOpcode(loadBinary(fromAddress)), toAddress / WORDSIZE));
