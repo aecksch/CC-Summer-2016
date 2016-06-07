@@ -1724,11 +1724,8 @@ int isCharacterLetter() {
 }
 
 int isCharacterDigit() {
-  if (character >= '0')
-    if (character <= '9')
-      return 1;
-    else
-      return 0;
+  if (character >= '0' && character <= '9')
+    return 1;
   else
     return 0;
 }
@@ -3623,15 +3620,15 @@ int gr_expression() {
 
 
       if(isBoolean()) {
-        operatorSymbol = symbol;
-        getSymbol();
+        // operatorSymbol = symbol;
+        // getSymbol();
 
         //TODO: warning here ok?
         if (ltype != INT_T)
           typeWarning(ltype, INT_T);
 
         wasBoolean = 1;
-        if (operatorSymbol == SYM_AND) {
+        if (symbol == SYM_AND) {
           getSymbol();
 
           fixlink_relative(branchToAndOrEnd);
@@ -3642,7 +3639,7 @@ int gr_expression() {
 
           branchToAndOrEnd = 0;
 
-        } else if (operatorSymbol == SYM_OR) {
+        } else if (symbol == SYM_OR) {
           getSymbol();
 
           fixlink_relative(branchToOrOrEnd);
