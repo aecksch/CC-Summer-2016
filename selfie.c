@@ -783,6 +783,7 @@ void emitJFormat(int opcode, int instr_index);
 void fixup_relative(int fromAddress);
 void fixup_absolute(int fromAddress, int toAddress);
 void fixlink_absolute(int fromAddress, int toAddress);
+void fixlink_relative(int fromAddress);
 
 int copyStringToBinary(int* s, int a);
 
@@ -3568,120 +3569,106 @@ int gr_expression() {
   int ltype;
   int operatorSymbol;
   int rtype;
-  int isNegL;
-  int isNegR;
-  int brForwardToEndOrOr;
-  int brForwadToEnd;
+  int isNeg;
+  int branchToOrOrEnd;
+  int branchToAndOrEnd;
 
-  //  if(gr_attribute == (int*)0)//FIXME
-        // gr_attribute = malloc(8);
+  if(gr_attribute == (int*)0)//FIXME
+    gr_attribute = malloc(8);
 
   // assert: n = allocatedTemporaries
 
-  isNegL = 0;
-  isNegR = 0;
-  brForwardToEndOrOr = 0;
-  brForwardToEnd = 0;
+  isNeg = 0;
+  branchToOrOrEnd = 0;
+  branchToAndOrEnd = 0;
 
   if(symbol == SYM_NOT) {
     getSymbol();
-    isNegL = 1;
+    isNeg = 1;
   }
 
   ltype = gr_compExpression(gr_attribute);
-
-
+  if(isNeg) {
+    emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
+    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 1);
+    emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
+    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 0);
+  }
   // assert: allocatedTemporaries == n + 1
-
+  isNeg = 0;
   //optional: &&, || compExpression
   while(isBoolean()) {
     operatorSymbol = symbol;
 
     getSymbol();
     if(symbol == SYM_NOT) {
+      print("Neg");
+      println();
       getSymbol();
-      isNegR = 1;
+      isNeg = 1;
     }
 
     rtype = gr_compExpression(gr_attribute);
-
+    if(isNeg) {
+      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
+      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
+      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
+      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
+    }
     // assert: allocatedTemporaries == n + 2
 
     //TODO: warning here ok?
-    if (ltype != rtype)
-      typeWarning(ltype, rtype);
+    if (ltype != INT_T)
+      typeWarning(ltype, INT_T);
 
-
+    //branchToEnd = binaryLength;
 
     if (operatorSymbol == SYM_AND) {
-      brForwardToEndOrOr = binaryLength;
+
+      fixlink_relative(branchToAndOrEnd);
+
+
       // check if left Operand != 0
-      if(isNegL == 0) {
-        emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), 0);
-        if(isNegR == 0) {
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
-        } else { //Negation
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
-        }
 
-        emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-      } else {
-        emitIFormat(OP_BNE, REG_ZR, previousTemporary(), 4);
-        if(isNegR == 0) {
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
-        } else { //Negation
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
-        }
+      emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), branchToOrOrEnd/WORDSIZE); //fixup
+      branchToOrOrEnd = binaryLength;
 
-        emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-      }
+      emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
+      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
+      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 2);
+
+      //emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
 
 
       tfree(1);
+
+      branchToAndOrEnd = 0;
 
     } else if (operatorSymbol == SYM_OR) {
-      // check if left Operand != 0
-      brForwardToEnd = binaryLength;
-      if(isNegL == 0) {
-        emitIFormat(OP_BNE, REG_ZR, previousTemporary(), 4);
-        if(isNegR == 0) {
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
-        } else { //Negation
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
-        }
 
-        emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-      } else {
-        emitIFormat(OP_BEQ, REG_ZR, previousTemporary(), 4);
-        if(isNegR == 0) {
-          emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
-        } else { //Negation
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 3);
-          emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
-          emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
-        }
+      fixlink_relative(branchToOrOrEnd);
 
-        emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 1);
-      }
 
+      emitIFormat(OP_BNE, REG_ZR, previousTemporary(), branchToAndOrEnd/WORDSIZE); //fixup
+      branchToAndOrEnd = binaryLength;
+
+      emitIFormat(OP_BNE, REG_ZR, currentTemporary(), 3);
+      emitIFormat(OP_ADDIU, REG_ZR, previousTemporary(), 0);
+      emitIFormat(OP_BEQ, REG_ZR, currentTemporary(), 2);
 
       tfree(1);
+
+      branchToOrOrEnd = 0;
     }
+    isNeg = 0;
   }
+
+  if(operatorSymbol != 0) {
+    emitIFormat(OP_ADDIU, REG_ZR, currentTemporary(), 1);
+    fixlink_relative(branchToAndOrEnd);
+    fixlink_relative(branchToOrOrEnd);
+  }
+
 
 
   return ltype;
@@ -5285,6 +5272,18 @@ void fixup_relative(int fromAddress) {
       getRS(instruction),
       getRT(instruction),
       (binaryLength - fromAddress - WORDSIZE) / WORDSIZE));
+}
+
+void fixlink_relative(int fromAddress) {
+  int previousAddress;
+
+  while (fromAddress != 0) {
+    previousAddress = getInstrIndex(loadBinary(fromAddress)) * WORDSIZE;
+
+    fixup_relative(fromAddress);
+
+    fromAddress = previousAddress;
+  }
 }
 
 void fixup_absolute(int fromAddress, int toAddress) {
