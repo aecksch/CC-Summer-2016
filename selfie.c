@@ -1709,16 +1709,10 @@ int findNextCharacter() {
 }
 
 int isCharacterLetter() {
-  if (character >= 'a')
-    if (character <= 'z')
-      return 1;
-    else
-      return 0;
-  else if (character >= 'A')
-    if (character <= 'Z')
-      return 1;
-    else
-      return 0;
+  if (character >= 'a' && character <= 'z')
+    return 1;
+  else if (character >= 'A' && character <= 'Z')
+    return 1;
   else
     return 0;
 }
