@@ -833,7 +833,9 @@ int  down_loadString(int* table, int vaddr, int* s);
 void implementOpen();
 
 void emitMalloc();
+void emitFree();
 void implementMalloc();
+void implementFree();
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
 
@@ -4698,10 +4700,12 @@ void gr_procedure(int* procedure, int returnType) {
   } else
     syntaxErrorUnexpected();
 
-  //while(local_symbol_table != (int*)0) {
-  //
-  //  local_symbol_table = local_symbol_table -> next;
-  //}
+  entry = local_symbol_table;
+  while(entry != (int*)0) {
+    next = entry -> next;
+    free((int*)entry);
+    entry = next;
+  }
   local_symbol_table = (int*) 0;
 
   // assert: allocatedTemporaries == 0
@@ -4970,6 +4974,7 @@ void selfie_compile() {
   emitWrite();
   emitOpen();
   emitMalloc();
+  emitFree();
 
   emitID();
   emitCreate();
