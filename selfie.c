@@ -112,6 +112,7 @@ void printString(int* s);
 int roundUp(int n, int m);
 
 int* malloc(int size);
+void free(int* p);
 void exit(int code);
 
 // ------------------------ GLOBAL CONSTANTS -----------------------
@@ -848,6 +849,7 @@ int SYSCALL_WRITE  = 4004;
 int SYSCALL_OPEN   = 4005;
 
 int SYSCALL_MALLOC = 4045;
+int SYSCALL_FREE   = 4046;
 
 // -----------------------------------------------------------------
 // ----------------------- HYPSTER SYSCALLS ------------------------
@@ -4569,6 +4571,7 @@ void gr_procedure(int* procedure, int returnType) {
   int functionStart;
   struct sym_table_entry *entry;
   int totalOffset;
+  struct sym_table_entry *next;
 
   currentProcedureName = procedure;
 
@@ -4695,6 +4698,10 @@ void gr_procedure(int* procedure, int returnType) {
   } else
     syntaxErrorUnexpected();
 
+  //while(local_symbol_table != (int*)0) {
+  //
+  //  local_symbol_table = local_symbol_table -> next;
+  //}
   local_symbol_table = (int*) 0;
 
   // assert: allocatedTemporaries == 0
@@ -5864,8 +5871,21 @@ void emitMalloc() {
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
 }
 
+void emitFree() {
+  createSymbolTableEntry(LIBRARY_TABLE, (int*) "free", 0, PROCEDURE, INTSTAR_T, 0, binaryLength, 0, 0, 0);
+
+  emitIFormat(OP_LW, REG_SP, REG_A0, 0); // pointer
+  emitIFormat(OP_ADDIU, REG_SP, REG_SP, WORDSIZE);
+
+  emitIFormat(OP_ADDIU, REG_ZR, REG_V0, SYSCALL_FREE);
+  emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
+
+  emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
 void implementFree() {
-  int* element = malloc(2 * WORDSIZE);
+  int* element;
+  element = malloc(2 * WORDSIZE);
   *(element + 1) = (int) freelist;
   *element = *(registers+REG_A0);
   freelist = element;
@@ -5874,7 +5894,7 @@ void implementFree() {
 void implementMalloc() {
   int size;
   int bump;
-
+  
   if (debug_malloc) {
     print(binaryName);
     print((int*) ": trying to malloc ");
@@ -5885,22 +5905,29 @@ void implementMalloc() {
 
   size = roundUp(*(registers+REG_A0), WORDSIZE);
 
-  bump = brk;
+  if(size == 12 * WORDSIZE && freelist != (int*) 0) {
+    *(registers+REG_V0) = *freelist;
+    freelist = (int*) *(freelist + 1);
+  } else {
+    
 
-  if (bump + size >= *(registers+REG_SP))
-    throwException(EXCEPTION_HEAPOVERFLOW, 0);
-  else {
-    *(registers+REG_V0) = bump;
+    bump = brk;
 
-    brk = bump + size;
+    if (bump + size >= *(registers+REG_SP))
+      throwException(EXCEPTION_HEAPOVERFLOW, 0);
+    else {
+      *(registers+REG_V0) = bump;
 
-    if (debug_malloc) {
-      print(binaryName);
-      print((int*) ": actually mallocating ");
-      print(itoa(size, string_buffer, 10, 0, 0));
-      print((int*) " bytes at virtual address ");
-      print(itoa(bump, string_buffer, 16, 8, 0));
-      println();
+      brk = bump + size;
+
+      if (debug_malloc) {
+        print(binaryName);
+        print((int*) ": actually mallocating ");
+        print(itoa(size, string_buffer, 10, 0, 0));
+        print((int*) " bytes at virtual address ");
+        print(itoa(bump, string_buffer, 16, 8, 0));
+        println();
+      }
     }
   }
 }
@@ -6366,6 +6393,8 @@ void fct_syscall() {
       implementOpen();
     else if (*(registers+REG_V0) == SYSCALL_MALLOC)
       implementMalloc();
+    else if (*(registers+REG_V0) == SYSCALL_FREE)
+      implementFree();
     else if (*(registers+REG_V0) == SYSCALL_ID)
       implementID();
     else if (*(registers+REG_V0) == SYSCALL_CREATE)
