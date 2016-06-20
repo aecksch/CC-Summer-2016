@@ -1057,6 +1057,8 @@ int* pt = (int*) 0; // page table
 
 int brk = 0; // break between code, data, and heap
 
+int* freelist = (int*) 0;
+
 int trap = 0; // flag for creating a trap
 
 int status = 0; // machine status including faulting address
@@ -5860,6 +5862,13 @@ void emitMalloc() {
   emitRFormat(OP_SPECIAL, 0, 0, 0, FCT_SYSCALL);
 
   emitRFormat(OP_SPECIAL, REG_RA, 0, 0, FCT_JR);
+}
+
+void implementFree() {
+  int* element = malloc(2 * WORDSIZE);
+  *(element + 1) = (int) freelist;
+  *element = *(registers+REG_A0);
+  freelist = element;
 }
 
 void implementMalloc() {
